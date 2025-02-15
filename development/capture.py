@@ -8,16 +8,16 @@ def capture_10():
         ret, frame = cap.read()
         count += 1
         if count % 3 == 0:
-            file_name = 'ToadsFactory'
+            file_name = 'N64BowsersCastle'
             cv.imwrite(f'Images/Courses/{file_name}_{pic}.png',frame)
             pic += 1
-        if count == 550:
+        if count == 650:
             break
 
 def capture_1():
     cap = cv.VideoCapture(0)
     ret, frame = cap.read()
-    file_name = 'None_0'
+    file_name = 'Unlabeled_0'
     cv.imwrite(f'Images/MenuScreen/{file_name}.png', frame)
     print('yes')
 
