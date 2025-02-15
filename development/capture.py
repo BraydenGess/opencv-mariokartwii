@@ -21,4 +21,22 @@ def capture_1():
     cv.imwrite(f'Images/MenuScreen/{file_name}.png', frame)
     print('yes')
 
-capture_1()
+
+import os
+
+# Path to the folder containing the files
+folder_path = 'Images/Courses/GrumbleVolcano'
+
+# Loop through all the files in the folder
+for filename in os.listdir(folder_path):
+    # Check if the file matches the pattern 'DSPeachBeach_xx.jpg'
+    if filename.startswith('GrumbleVolcanp_') and filename.endswith('.png'):
+        # Construct the new filename by replacing 'Beach' with 'Gardens'
+        new_filename = filename.replace('GrumbleVolcanp', 'GrumbleVolcano')
+        # Get the full path of the current and new file
+        old_file = os.path.join(folder_path, filename)
+        new_file = os.path.join(folder_path, new_filename)
+
+        # Rename the file
+        os.rename(old_file, new_file)
+        print(f'Renamed: {filename} -> {new_filename}')
