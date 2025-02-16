@@ -17,13 +17,18 @@ Located in `flag_detection.py`, this model focuses on binary classification to d
 ### Course Detection Model
 Located in `train.py`, this model performs multi-class classification to identify different MarioKart courses. Key features:
 
-- Handles 6 different classes:
+- Handles 34 different classes:
   - None (no course)
   - Opening
-  - Luigi Circuit  
-  - Moo Moo Meadows
-  - Mushroom Gorge
-  - Toad's Factory
+  - All MarioKart wii courses
+    - Mushroom Cup (Luigi Circuit, Moo Meadows, Mushroom Gorge, Toad's Factory)
+    - Flower Cup (Mario Circuit, Coconut Mall, DK Summit, Wario’s Gold Mine)
+    - Star Cup (Daisy Circuit, Koopa Cape, Maple Treeway, Grumble Volcano)
+    - Special Cup (Dry Dry Ruins, Moonview Highway, Bowser’s Castle, Rainbow Road)
+    - Shell Cup (GCN Peach Beach, DS Yoshi Falls, SNES Ghost Valley 2, N64 Mario Raceway_
+    - Banana Cup (N64 Sherbet Land, GBA Shy Guy Beach, DS Delfino Square, GCN Waluigi Stadium)
+    - Leaf Cup (DS Desert Hills, GBA Bowser Castle 3, N64 DK’s Jungle Parkway, GCN Mario Circuit)
+    - Lightning Cup (SNES Mario Circuit 3, DS Peach Gardens, GCN DK Mountain, N64 Bowser’s Castle)
 - Uses a custom MarioKartDataset class for loading course images
 - Training includes validation to prevent overfitting
 
