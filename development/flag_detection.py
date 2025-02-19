@@ -11,15 +11,25 @@ from pathlib import Path
 import numpy as np
 from sklearn.metrics import classification_report
 import sys
+import cv2
 
 class FlagDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, transform=None, visualize_roi=False):
         self.root_dir = root_dir
         self.transform = transform
+        self.visualize_roi = visualize_roi
         self.classes = ['no_flag', 'flag']
         self.class_to_idx = {cls: idx for idx, cls in enumerate(self.classes)}
         self.images = []
         self.labels = []
+        
+        # Define ROI for flag detection
+        self.flag_roi = (250, 75, 150, 150)  # (x, y, width, height)
+        
+        # Create visualization directory if needed
+        if self.visualize_roi:
+            self.vis_dir = Path('roi_visualizations')
+            self.vis_dir.mkdir(exist_ok=True)
         
         # Load all images and labels
         for class_name in self.classes:
@@ -30,6 +40,28 @@ class FlagDataset(Dataset):
                         self.images.append(os.path.join(class_path, img_name))
                         self.labels.append(self.class_to_idx[class_name])
 
+    def visualize_roi_on_image(self, image_path, roi_image):
+        """Save original image with ROI overlay"""
+        # Load original image with cv2
+        orig_image = cv2.imread(image_path)
+        x, y, w, h = self.flag_roi
+        
+        # Draw ROI rectangle in red
+        cv2.rectangle(orig_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+        
+        # Add semi-transparent overlay
+        overlay = orig_image.copy()
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 255), -1)
+        cv2.addWeighted(overlay, 0.3, orig_image, 0.7, 0, orig_image)
+        
+        # Save visualization
+        vis_path = self.vis_dir / f"roi_{Path(image_path).name}"
+        cv2.imwrite(str(vis_path), orig_image)
+        
+        # Also save the cropped ROI next to it for comparison
+        roi_vis_path = self.vis_dir / f"roi_crop_{Path(image_path).name}"
+        cv2.imwrite(str(roi_vis_path), cv2.cvtColor(np.array(roi_image), cv2.COLOR_RGB2BGR))
+
     def __len__(self):
         return len(self.images)
 
@@ -38,10 +70,18 @@ class FlagDataset(Dataset):
         image = Image.open(img_path).convert('RGB')
         label = self.labels[idx]
 
-        if self.transform:
-            image = self.transform(image)
+        # Extract ROI
+        x, y, w, h = self.flag_roi
+        roi_image = image.crop((x, y, x+w, y+h))
 
-        return image, label
+        # Visualize if requested
+        if self.visualize_roi:
+            self.visualize_roi_on_image(img_path, roi_image)
+
+        if self.transform:
+            roi_image = self.transform(roi_image)
+
+        return roi_image, label
 
 class FlagDetector(nn.Module):
     def __init__(self):
@@ -127,21 +167,27 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
     return model
 
 def main():
+    # Set up dataset with visualization enabled
     dataset_path = sys.argv[1]
-
-    # Set device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
     
     # Define transforms
     transform = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize((64, 64)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                            std=[0.229, 0.224, 0.225])
     ])
 
-    # Create datasets
+    # Create datasets with visualization enabled for training set
+    dataset = FlagDataset(dataset_path, transform=None, visualize_roi=True)
+    
+    # Process all images to generate visualizations
+    print("Generating ROI visualizations...")
+    for i in range(len(dataset)):
+        dataset[i]
+    print(f"ROI visualizations saved in {dataset.vis_dir}/")
+    
+    # Now create the actual training dataset with transforms
     dataset = FlagDataset(dataset_path, transform=transform)
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
@@ -162,4 +208,5 @@ def main():
     model = train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs=25, device=device)
 
 if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     main()
