@@ -1,8 +1,11 @@
 
 def pause_toggle(frame):
-    #index, confidence = predict(frame)
-    #pause
-    return 0
+    #pause = predict(frame)
+    # if pause:
+        #pause
+    # if not pause:
+        # don't pause
+    pass
 
 def play_music(frame):
     # index, confidence = predict(frame)
