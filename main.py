@@ -1,10 +1,37 @@
-import cv2 as cv
+import cv2
+import sys
+import time
+from development.course_detector import CourseDetector
 
 def main():
-    cap = cv.VideoCapture(0)
+    cap = cv2.VideoCapture(0)
+    detector = CourseDetector(flag_model_path = 'development/models/flag_detector_20250215_115232.pth')
     while cap.isOpened():
         ret, frame = cap.read()
-        print(frame)
+        # Draw ROIs for debugging
+        x, y, w, h = detector.text_roi
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # Time the detection
+        start_time = time.time()
+        course_name, confidence, text_detections = detector.detect_course(frame)
+        process_time = time.time() - start_time
+
+        # Display results
+        if course_name:
+            cv2.putText(frame, f"{course_name} ({confidence:.2f})", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.putText(frame, f"FPS: {1 / process_time:.1f}", (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.imshow('Frame', frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 main()
 
