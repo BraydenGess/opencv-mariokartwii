@@ -1,4 +1,35 @@
-# python flag_detection.py <dataset_path>
+"""
+Flag Detection Module for Mario Kart Course Recognition
+====================================================
+
+This module implements a flag detection system for Mario Kart course screenshots using
+computer vision and deep learning techniques. It focuses on identifying the presence
+of checkpoint/finish line flags in race screenshots to help determine valid course images.
+
+Key Components:
+-------------
+- FlagDataset: Custom PyTorch dataset for loading and preprocessing flag images
+- ROI-based detection: Uses a specific region of interest where flags typically appear
+- Binary classification: Distinguishes between images with and without flags
+- Visualization tools: Includes ROI visualization capabilities for debugging
+
+Usage:
+-----
+python flag_detection.py <dataset_path>
+
+The dataset path should contain two subdirectories:
+- flag/: Images containing checkpoint/finish line flags
+- no_flag/: Images without flags
+
+This is part of a larger system for automatically recognizing Mario Kart courses
+from gameplay screenshots. Flag detection helps validate whether an image shows
+a valid racing moment.
+
+Author: Max White
+Date: February 2025
+"""
+
+
 
 import torch
 import torch.nn as nn

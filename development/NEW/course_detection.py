@@ -1,4 +1,37 @@
-# python3 course_detector.py <flag_model_path>
+"""
+Course Detection Module for Mario Kart Screenshots
+===============================================
+
+This module implements a comprehensive course detection system for Mario Kart gameplay
+screenshots. It combines OCR (Optical Character Recognition) with computer vision and
+deep learning techniques to identify race courses from in-game images.
+
+Key Components:
+-------------
+- OCR-based text detection: Uses Tesseract with multiple PSM modes for robust text recognition
+- Flag detection: Neural network model to validate race screenshots via checkpoint flags
+- Image preprocessing: Custom filters and transformations to optimize text extraction
+- Multi-stage validation: Combines multiple detection methods for higher accuracy
+
+The system handles various challenges including:
+- Variable text positioning and formatting
+- Different lighting conditions and motion blur
+- False positives from UI elements and decorative text
+- Multiple languages and character sets
+
+Usage:
+-----
+python course_detector.py <flag_model_path>
+
+The flag_model_path argument should point to a trained PyTorch model for flag detection.
+The system will process images and output course identifications along with confidence scores.
+
+This is part of a larger Mario Kart course recognition system that enables automated
+gameplay analysis and statistics tracking.
+
+Author: Max White
+Date: February 2025
+"""
 
 import cv2
 import numpy as np
@@ -93,7 +126,7 @@ class SimpleFlagDetector(nn.Module):
         return x
 
 class CourseDetector:
-    def __init__(self, flag_model_path, use_template=False, psm=6): # PSM 6 and 9 are the best
+    def __init__(self, flag_model_path, use_template=False, psm=6): # PSM 6 and 9 are the best eh idk actually
         self.text_roi = (1000, 900, 800, 100)  # Keep text ROI for course names
         
         # Known course names for matching (needs update for more courses)
