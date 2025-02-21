@@ -73,7 +73,7 @@ class CourseDetector:
             # Use CNN approach
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             self.flag_detector = FlagDetector().to(self.device)
-            self.flag_detector.load_state_dict(torch.load(flag_model_path))
+            self.flag_detector.load_state_dict(torch.load(flag_model_path, map_location = self.device))
             self.flag_detector.eval()
             
             # Transform for flag detection
