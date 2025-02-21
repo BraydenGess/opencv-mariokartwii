@@ -185,10 +185,10 @@ class CourseDetector:
         course_name, text_confidence = self._match_course_name(course_text)
         
         # For debugging
-        if course_name:
-            print(f"Flag confidence: {flag_confidence:.2f}")
-            print(f"Detected course text: {course_text}")
-            print(f"Matched course: {course_name}")
+        #if course_name:
+            #print(f"Flag confidence: {flag_confidence:.2f}")
+            #print(f"Detected course text: {course_text}")
+            #print(f"Matched course: {course_name}")
             
         # Return course name, combined confidence, and all text detections
         if course_name:

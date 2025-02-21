@@ -2,6 +2,7 @@ import cv2
 import sys
 import time
 from development.course_detector import CourseDetector
+from  __init__ import *
 
 from spotify_audio import run_audio
 
@@ -19,7 +20,6 @@ def test():
         # Time the detection
         start_time = time.time()
         course_name, confidence, text_detections = detector.detect_course(frame)
-        print(course_name, confidence, text_detections)
         process_time = time.time() - start_time
 
         # Display results
@@ -40,11 +40,16 @@ def test():
 
 def main():
     frame = cv2.imread('development/Images/Courses/N64DKsJungleParkway/N64DKsJungleParkway_54.png')
+
+    model_store = ModelStore()
+    sp = SpotifyPlayer()
+
     #cap = cv2.VideoCapture(0)
     # while cap.isOpened():
     while True:
-        run_audio(frame)
-        return 0
+        cv2.imshow('Frame', frame)
+        run_audio(frame, model_store, sp)
+    return 0
 
 
 
