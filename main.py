@@ -39,7 +39,7 @@ def test():
     cv2.destroyAllWindows()
 
 def main():
-    frame = cv2.imread('development/Images/Courses/N64DKsJungleParkway/N64DKsJungleParkway_54.png')
+    frame = cv2.imread('development/Images/Courses/WariosGoldMine/WariosGoldMine_57.png')
     model_store = ModelStore()
     sp = SpotifyPlayer()
     #cap = cv2.VideoCapture(0)
