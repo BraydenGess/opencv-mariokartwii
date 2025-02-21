@@ -40,14 +40,11 @@ def test():
 
 def main():
     frame = cv2.imread('development/Images/Courses/N64DKsJungleParkway/N64DKsJungleParkway_54.png')
-
     model_store = ModelStore()
     sp = SpotifyPlayer()
-
     #cap = cv2.VideoCapture(0)
     # while cap.isOpened():
     while True:
-        cv2.imshow('Frame', frame)
         run_audio(frame, model_store, sp)
     return 0
 

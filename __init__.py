@@ -117,11 +117,13 @@ class SpotifyPlayer():
         self.playlist = course_dict
         self.songkey_dict = songkey_dict
 
+
 class Song():
     def __init__(self,song_name,uri,img):
         self.song_name = song_name
         self.uri = uri
         self.img = img
+
 
 class Course():
     def __init__(self, course_name = None, song_queue = None):
