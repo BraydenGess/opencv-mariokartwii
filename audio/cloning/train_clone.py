@@ -28,7 +28,7 @@ def main():
     # INITIALIZE THE TRAINING CONFIGURATION
     # Configure the model. Every config class inherits the BaseTTSConfig.
     config = GlowTTSConfig(
-        batch_size=2,
+        batch_size=4,
         eval_batch_size=2,
         num_loader_workers=2,
         num_eval_loader_workers=2,
@@ -70,8 +70,7 @@ def main():
     trainer.fit()
 
 ### command line
-## tts --text "Sample text" --model_path path/to/best_model.pth
-# --config_path path/to/config.json --out_path path/to/speech.wav
+## tts --text "Sample text" --model_path path/to/best_model.pth --config_path path/to/config.json --out_path path/to/speech.wav
 
 if __name__ == "__main__":
     main()
