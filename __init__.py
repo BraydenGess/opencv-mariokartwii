@@ -99,6 +99,14 @@ class SpotifyPlayer():
         f.close()
         return songkey_dict
 
+    def spotify_safetycheck(self):
+        warning = False
+        while self.spotify.current_playback()==None:
+            if not warning:
+                print('Activate Spotify')
+                warning = True
+        print('Spotify Connection Successful')
+
     def spotify_setup(self):
         file = open('credentials.txt','r')
         cred_dict = {'username': 'None', 'client_id': 'None', 'client_secret': 'None', 'redirect_uri': 'None'}
@@ -115,6 +123,7 @@ class SpotifyPlayer():
         course_dict = self.make_coursedict(file = course_playlistfile)
         self.playlist = course_dict
         self.songkey_dict = songkey_dict
+        self.spotify_safetycheck()
 
 
 class Song():
