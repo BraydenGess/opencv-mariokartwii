@@ -1,6 +1,3 @@
-This is audio MarioKart Wii project 
-
-
 # Development 
 
 The development directory contains the core machine learning models and training scripts for the MarioKart Wii project:
