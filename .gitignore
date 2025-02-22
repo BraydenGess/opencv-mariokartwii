@@ -3,5 +3,5 @@
 __pycache__/
 credentials.txt
 .cache-bradygess
-tts_env
-tests/infer_cli_basic.wav
+.tts_env/
+.tests/
