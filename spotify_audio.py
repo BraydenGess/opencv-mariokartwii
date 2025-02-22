@@ -1,3 +1,6 @@
+import random
+import cv2
+
 
 def pause_toggle(frame):
     #pause = predict(frame)
@@ -12,6 +15,9 @@ def play_music(frame, model_store, sp):
     if course_name:
         if course_name != sp.course_queued:
             sp.queue_newsong(course_name)
+            num = random.randint(1,100)
+            cv2.imwrite(f'development/triggers/{course_name}_{num}.png', frame)
+
     return 0
 
 def run_audio(frame, model_store, sp):

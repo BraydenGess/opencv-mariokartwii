@@ -3,7 +3,6 @@ import sys
 import time
 from __init__ import *
 from development.course_detector import CourseDetector
-
 from spotify_audio import run_audio
 
 
