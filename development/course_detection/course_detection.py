@@ -125,11 +125,20 @@ class SimpleFlagDetector(nn.Module):
         x = self.classifier(x)
         return x
 
-class CourseDetector:
-    def __init__(self, flag_model_path, use_template=False, psm=6): # PSM 6 and 9 are the best eh idk actually
-        self.text_roi = (1000, 900, 800, 100)  # Keep text ROI for course names
+class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
+    def __init__(self, flag_model_path, psm=6, 
+                 text_match_confidence=0.8,  # Minimum confidence for text matching
+                 binary_threshold_min=200,   # Lower bound for binary threshold
+                 binary_threshold_max=250):  # Upper bound for binary threshold
+        """Initialize the course detector with configurable parameters"""
+        self.text_roi = (1000, 900, 800, 100) 
         
-        # Known course names for matching (needs update for more courses)
+        # Store hyperparameters
+        self.text_match_confidence = text_match_confidence
+        self.binary_threshold_min = binary_threshold_min
+        self.binary_threshold_max = binary_threshold_max
+        
+        # Known course names for matching
         self.course_names = [
             "Luigi Circuit",
             "Moo Moo Meadows", 
@@ -165,32 +174,22 @@ class CourseDetector:
             "N64 Bowser's Castle"
         ]
         
-        #self.tesseract_config = '--psm 7 --oem 3 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\'" -l eng --dpi 300'
+        # Setup CNN-based flag detection
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.flag_detector = SimpleFlagDetector().to(self.device)
+        self.flag_detector.load_state_dict(torch.load(flag_model_path, map_location=self.device))
+        self.flag_detector.eval()  # Make sure we're in eval mode
         
-        # Flag detection setup
-        if use_template:
-            # Use template matching approach
-            from template_flag_detector import TemplateFlagDetector
-            self.flag_detector = TemplateFlagDetector(flag_model_path)
-            self.flag_roi = self.flag_detector.flag_roi
-        else:
-            # Use CNN approach
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.flag_detector = SimpleFlagDetector().to(self.device)
-            self.flag_detector.load_state_dict(torch.load(flag_model_path, map_location=self.device))
-            self.flag_detector.eval()  # Make sure we're in eval mode
-            
-            # Transform for flag detection
-            self.transform = transforms.Compose([
-                transforms.Resize((64, 64)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                   std=[0.229, 0.224, 0.225])
-            ])
-            
-            self.flag_roi = (274, 109, 72, 45)  # Match training ROI exactly
+        # Transform for flag detection
+        self.transform = transforms.Compose([
+            transforms.Resize((64, 64)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                               std=[0.229, 0.224, 0.225])
+        ])
         
-        self.confidence_threshold = 0.6
+        self.flag_roi = (274, 109, 72, 45)
+        self.confidence_threshold = 0.9
         self.psm = psm
 
     def _detect_flag(self, frame):
@@ -200,17 +199,11 @@ class CourseDetector:
             x, y, w, h = self.flag_roi
             roi = frame[y:y+h, x:x+w]
             
-            # Debug: Save ROI for inspection
-            cv2.imwrite('debug_roi.png', roi)
-            
             # Convert BGR to RGB (same as training)
             roi_rgb = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
             
             # Convert to PIL Image (same as training Dataset class)
             roi_pil = Image.fromarray(roi_rgb)
-            
-            # Debug: Save PIL image for inspection
-            roi_pil.save('debug_pil.png')
             
             # Apply same transforms as training
             input_tensor = self.transform(roi_pil)
@@ -222,12 +215,6 @@ class CourseDetector:
                 probabilities = torch.nn.functional.softmax(output, dim=1)
                 confidence = probabilities[0][1].item()
                 prediction = confidence > self.confidence_threshold
-                
-                # Debug: Print prediction details
-                # print(f"Raw output: {output}")
-                # print(f"Probabilities: {probabilities}")
-                # print(f"Confidence: {confidence}")
-                # print(f"Prediction: {prediction}")
             
             return prediction, confidence
             
@@ -261,8 +248,11 @@ class CourseDetector:
             # Convert frame to grayscale
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             
-            # Threshold the image
-            _, binary = cv2.threshold(gray, 150, 230, cv2.THRESH_BINARY)
+            # Threshold the image using instance parameters
+            _, binary = cv2.threshold(gray, 
+                                    self.binary_threshold_min, 
+                                    self.binary_threshold_max, 
+                                    cv2.THRESH_BINARY)
 
             # Remove noise
             img = self._noise_removal(binary)
@@ -271,8 +261,6 @@ class CourseDetector:
             img = self._thin_font(img)
 
             x, y, w, h = self.text_roi
-
-            # display(img[y:y+h, x:x+w])
 
             # Get course text from the binary image
             custom_config = f'--psm {self.psm}'  # Use the instance PSM value
@@ -298,11 +286,14 @@ class CourseDetector:
         from difflib import SequenceMatcher
         for course in self.course_names:
             ratio = SequenceMatcher(None, detected_text.lower(), course.lower()).ratio()
-            if ratio > best_ratio and ratio > 0.5:
+            if ratio > best_ratio:
                 best_ratio = ratio
                 best_match = course
                 
-        return best_match, best_ratio
+        # Only return match if confidence exceeds threshold
+        if best_ratio >= self.text_match_confidence:
+            return best_match, best_ratio
+        return None, best_ratio
     
     def detect_course(self, frame):
         """
