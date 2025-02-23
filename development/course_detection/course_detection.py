@@ -127,8 +127,8 @@ class SimpleFlagDetector(nn.Module):
 
 class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
     def __init__(self, flag_model_path, psm=6, 
-                 text_match_confidence=0.8,  # Minimum confidence for text matching
-                 binary_threshold_min=200,   # Lower bound for binary threshold
+                 text_match_confidence=0.65,  # Minimum confidence for text matching
+                 binary_threshold_min=100,   # Lower bound for binary threshold
                  binary_threshold_max=250):  # Upper bound for binary threshold
         """Initialize the course detector with configurable parameters"""
         self.text_roi = (1000, 900, 800, 100) 
