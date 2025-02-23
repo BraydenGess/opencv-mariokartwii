@@ -3,6 +3,5 @@
 __pycache__/
 credentials.txt
 .cache-bradygess
-.tts_env/
-tests
 tts_env/
+tests/
