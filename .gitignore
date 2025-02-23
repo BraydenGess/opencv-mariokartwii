@@ -5,3 +5,4 @@ credentials.txt
 .cache-bradygess
 .tts_env/
 tests
+tts_env/
