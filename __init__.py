@@ -3,7 +3,7 @@ import time
 from collections import deque
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
-from development.course_detector import CourseDetector
+from development.course_detection.course_detection import CourseDetector
 
 class ModelStore():
     def __init__(self):
