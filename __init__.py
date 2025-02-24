@@ -11,7 +11,7 @@ class ModelStore():
         self.load_models()
 
     def load_models(self):
-        self.models['course_detector'] = CourseDetector(flag_model_path='development/models/flag_detector_20250215_115232.pth')
+        self.models['course_detector'] = CourseDetector(flag_model_path='development/course_detection/models/flag_detector_20250221_122742.pth')
 
 
 class SpotifyPlayer():
