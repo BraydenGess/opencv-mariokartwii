@@ -7,18 +7,19 @@ def capture_10():
     while cap.isOpened():
         ret, frame = cap.read()
         count += 1
-        if count % 12 == 0:
-            file_name = 'BowsersCastle_score'
-            cv.imwrite(f'development/Images/RawCourses/{file_name}_{pic}.png',frame)
+        if count % 18 == 0:
+            file_name = 'BabyMario+BabyLuigi+BabyPeach+TransRob'
+            cv.imwrite(f'development/Images/Characters/{file_name}_{pic}.png',frame)
             pic += 1
-        if count == 240:
+        if count == 73:
             break
 
 def capture_1():
     cap = cv.VideoCapture(0)
     ret, frame = cap.read()
-    file_name = 'homescreen_4'
+    file_name = 'homescreen_5'
     cv.imwrite(f'development/Images/HomeScreen/{file_name}.png', frame)
+    print(file_name)
 
 capture_10()
 
