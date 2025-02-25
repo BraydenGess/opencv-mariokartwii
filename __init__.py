@@ -135,7 +135,7 @@ class SpotifyPlayer():
                                     username=cred_dict['username']))
 
         songkey_dict = self.make_songkeydict(file = 'audio/song_uri.csv')
-        course_playlistfile = 'audio/playlists/rock.csv'
+        course_playlistfile = 'audio/playlists/rock_noon.csv'
         course_dict = self.make_coursedict(file = course_playlistfile)
         self.playlist = course_dict
         self.songkey_dict = songkey_dict
