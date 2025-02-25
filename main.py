@@ -9,12 +9,10 @@ def safe_framepull():
     return cap
 
 def main():
-    #frame = cv2.imread('development/Images/Courses/WariosGoldMine/WariosGoldMine_57.png')
     model_store = ModelStore()
     sp = SpotifyPlayer()
     cap = safe_framepull()
     while cap.isOpened():
-    #while True:
         ret, frame = cap.read()
         run_audio(frame, model_store, sp)
         if cv2.waitKey(1) & 0xFF == ord('q'):

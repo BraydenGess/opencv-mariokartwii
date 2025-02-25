@@ -215,7 +215,6 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
                 probabilities = torch.nn.functional.softmax(output, dim=1)
                 confidence = probabilities[0][1].item()
                 prediction = confidence > self.confidence_threshold
-            
             return prediction, confidence
             
         except Exception as e:
@@ -313,8 +312,8 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
         # Store raw text for logging (before any processing)
         self.last_raw_text = course_text
         
-        if not flag_detected:
-            return None, 0, None
+        #if not flag_detected:
+            #return None, 0, None
             
         # If flag found, try to match course name
         course_name, text_confidence = self._match_course_name(course_text)

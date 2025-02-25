@@ -1,5 +1,6 @@
 import random
 import time
+import os
 from collections import deque
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
@@ -108,7 +109,8 @@ class SpotifyPlayer():
         print('Spotify Connection Successful')
 
     def spotify_setup(self):
-        file = open('credentials.txt','r')
+        file_path = 'credentials.txt'
+        file = open(file_path,'r')
         cred_dict = {'username': 'None', 'client_id': 'None', 'client_secret': 'None', 'redirect_uri': 'None'}
         for cred in file.readlines():
             [label, key] = cred.split(' ')
