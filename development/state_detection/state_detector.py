@@ -1,40 +1,53 @@
-from PIL import Image
-from torchvision import transforms
 import torch
+import torch.nn as nn
+from torchvision import transforms
+from PIL import Image
+from development.state_detection.train_state_detector import SimpleCNN
 
-class StateDetector():
-    def __init__(self, model = None):
-        self.model = model
+class StateDetector:
+    def __init__(self, model_path=None, class_names=None):
+        self.model_path = model_path
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.class_names =  ['characters', 'controller', 'drift', 'homescreen', 'main',
+                             'players', 'startrace', 'vehicles', 'vs', 'None']
+        self.model = None
+        self.setup()
 
-    def predict(self,frame):
-        # Define the same transformation pipeline as during training
-        transform = transforms.Compose([
-            transforms.Lambda(lambda img: img.crop((100, 20, 800, 160))),  # Crop (left, top, right, bottom)
-            transforms.Resize((128, 128)),  # Resize to the same size used during training
+        # Define transformations (fixing the missing self.transform)
+        self.transform = transforms.Compose([
+            transforms.Lambda(lambda img: img.crop((100, 20, 800, 160))),  # Crop
+            transforms.Resize((128, 128)),  # Resize
             transforms.ToTensor(),  # Convert to tensor
             transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize
         ])
 
-        # Load and transform the image
-        image_path = "path_to_image.png"  # Specify the image path
-        img = Image.open(image_path).convert('RGB')  # Open the image
-        img = transform(img).unsqueeze(0)  # Apply the transformation and add batch dimension
+    def setup(self):
+        self.model = SimpleCNN(num_classes=10)  # Ensure num_classes matches training
+        self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
+        self.model.to(self.device)
+        self.model.eval()  # Set to evaluation mode
+        print("Model loaded successfully!")
 
-        # Ensure the model is on the correct device (GPU/CPU)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(device)
+    def predict(self, frame):
+        """Predicts the class of a given image frame."""
+        # Convert NumPy array (if needed) to PIL image
+        if isinstance(frame, torch.Tensor):
+            frame = frame.cpu().numpy()
+        if not isinstance(frame, Image.Image):
+            frame = Image.fromarray(frame)
 
-        # Send the image tensor to the same device (GPU/CPU)
-        img = img.to(device)
+        # Apply transformations
+        img = self.transform(frame).unsqueeze(0).to(self.device)  # Add batch dim & move to device
 
         # Make the prediction
-        with torch.no_grad():  # No need to track gradients during inference
-            output = self.model(img)  # Forward pass through the model
+        with torch.no_grad():
+            output = self.model(img)
 
-        # Get the predicted class
+        # Get the predicted class index
         _, predicted_class = torch.max(output, 1)
 
-        # Map the predicted class index back to the class name
-        predicted_class_name = self.model.classes[predicted_class.item()]
+        # Map to class name if available
+        if self.class_names:
+            return self.class_names[predicted_class.item()]
 
-        return predicted_class_name
+        return predicted_class.item()  # Return class index if no names are provided

@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 from collections import deque
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 from development.course_detection.course_detection import CourseDetector
+from development.state_detection.state_detector import StateDetector
 
 class ModelStore():
     def __init__(self):
@@ -14,6 +15,7 @@ class ModelStore():
 
     def load_models(self):
         self.models['course_detector'] = CourseDetector(flag_model_path='development/course_detection/models/flag_detector_20250221_122742.pth')
+        self.models['state_detector'] = StateDetector(model_path = 'production/models/menu_detection.pth')
 
 class Song():
     def __init__(self,song_name,uri,img):
