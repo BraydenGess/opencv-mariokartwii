@@ -175,7 +175,8 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
         ]
         
         # Setup CNN-based flag detection
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+        #  ^ FOR BRADY THIS IS A PROBLEM LINE ^ there is some torch command to run with "mps" instead of "cpu" for devices without cuda
         self.flag_detector = SimpleFlagDetector().to(self.device)
         self.flag_detector.load_state_dict(torch.load(flag_model_path, map_location=self.device))
         self.flag_detector.eval()  # Make sure we're in eval mode
@@ -188,7 +189,7 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
                                std=[0.229, 0.224, 0.225])
         ])
         
-        self.flag_roi = (274, 109, 72, 45)
+        self.flag_roi = (235, 85, 70, 45)
         self.confidence_threshold = 0.9
         self.psm = psm
 
@@ -328,41 +329,62 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
             return course_name, confidence, course_text
         return None, 0, course_text
 
-def main():
-    """Test the detector with a video capture."""
-    flag_model_path = sys.argv[1]
-    cap = cv2.VideoCapture(0)  # or path to video file
+def visualize_rois(image_path, flag_model_path):
+    """Test the detector with a single image and save visualization."""
     detector = CourseDetector(flag_model_path)
     
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-            
-        # Draw ROIs for debugging
-        x, y, w, h = detector.text_roi
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    # Read the image
+    frame = cv2.imread(image_path)
+    if frame is None:
+        print(f"Failed to load image: {image_path}")
+        return
         
-        # Time the detection
-        start_time = time.time()
-        course_name, confidence, text_detections = detector.detect_course(frame)
-        process_time = time.time() - start_time
-        
-        # Display results
-        if course_name:
-            cv2.putText(frame, f"{course_name} ({confidence:.2f})", (10, 30), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        
-        cv2.putText(frame, f"FPS: {1/process_time:.1f}", (10, 60),
-                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        
-        cv2.imshow('Frame', frame)
-        
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    # Make a copy for visualization
+    viz_frame = frame.copy()
     
-    cap.release()
-    cv2.destroyAllWindows()
+    # Draw ROIs
+    # Flag ROI in red
+    fx, fy, fw, fh = detector.flag_roi
+    cv2.rectangle(viz_frame, (fx, fy), (fx+fw, fy+fh), (0, 0, 255), 2)
+    
+    # Text ROI in green
+    tx, ty, tw, th = detector.text_roi
+    cv2.rectangle(viz_frame, (tx, ty), (tx+tw, ty+th), (0, 255, 0), 2)
+    
+    # Run detection
+    course_name, confidence, text_detections = detector.detect_course(frame)
+    
+    # Add detection results as text
+    info_text = [
+        f"Course: {course_name if course_name else 'None'}",
+        f"Confidence: {confidence:.2f}",
+        f"Raw Text: {text_detections if text_detections else 'None'}"
+    ]
+    
+    # Add text to image
+    for i, text in enumerate(info_text):
+        y_pos = 30 * (i + 1)
+        cv2.putText(viz_frame, text, (10, y_pos), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    
+    # Save visualization
+    output_path = 'roi_visualization.png'
+    cv2.imwrite(output_path, viz_frame)
+    print(f"Saved visualization to: {output_path}")
+    
+    # Also save the extracted ROIs separately for detailed inspection
+    flag_roi = frame[fy:fy+fh, fx:fx+fw]
+    text_roi = frame[ty:ty+th, tx:tx+tw]
+    
+    cv2.imwrite('flag_roi.png', flag_roi)
+    cv2.imwrite('text_roi.png', text_roi)
+    print("Saved ROI extracts to: flag_roi.png and text_roi.png")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 3:
+        print("Usage: python course_detection.py <flag_model_path> <test_image_path>")
+        sys.exit(1)
+        
+    flag_model_path = sys.argv[1]
+    test_image_path = sys.argv[2]
+    visualize_rois(test_image_path, flag_model_path)

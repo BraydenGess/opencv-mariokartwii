@@ -57,7 +57,8 @@ class FlagDataset(Dataset):
         
         # Define ROI for flag detection
         # self.flag_roi = (250, 75, 150, 150)  # (x, y, width, height)
-        self.flag_roi = (274, 109, 72, 45)
+        # self.flag_roi = (274, 109, 72, 45)
+        self.flag_roi = (235, 85, 70, 45) # new ROI for new hardware
         
         # Create visualization directory if needed
         if self.visualize_roi:
