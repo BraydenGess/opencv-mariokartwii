@@ -30,18 +30,13 @@ class SimpleCNN(nn.Module):
 def main():
     # Define transformations (resize, normalize, convert to tensor)
     transform = transforms.Compose([
-        transforms.Lambda(lambda img: img.crop((100, 20, 800, 160))),  # Crop (left, top, right, bottom)
+        transforms.Lambda(lambda img: img.crop((100, 20, 700, 120))),  # Crop (left, top, right, bottom)
         transforms.Resize((128, 128)),  # Resize images
         transforms.ToTensor(),  # Convert to tensor
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize
     ])
 
     # Load dataset
-    menu_screen_dataset = datasets.ImageFolder(root="development/Images/MenuScreen/", transform=transform)
-    none_dataset = datasets.ImageFolder(root="development/Images/None", transform=transform)
-
-    dataset = ConcatDataset([menu_screen_dataset, none_dataset])
-    dataset_classes = menu_screen_dataset.classes + none_dataset.classes
+    dataset = datasets.ImageFolder(root="development/Images/MenuScreen/", transform=transform)
 
 
     # Split into train and validation sets
@@ -54,10 +49,10 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
 
     # Check class names
-    print(f"Classes: {dataset_classes}")
+    print(f"Classes: {dataset.classes}")
 
     # Get number of classes
-    num_classes = len(dataset_classes)
+    num_classes = len(dataset.classes)
     model = SimpleCNN(num_classes)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)

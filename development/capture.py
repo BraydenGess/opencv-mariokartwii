@@ -17,11 +17,11 @@ def capture_10():
 def capture_1():
     cap = cv.VideoCapture(0)
     ret, frame = cap.read()
-    file_name = 'homescreen_5'
-    cv.imwrite(f'development/Images/HomeScreen/{file_name}.png', frame)
+    file_name = 'none_15'
+    cv.imwrite(f'development/Images/None/None/{file_name}.png', frame)
     print(file_name)
 
-capture_10()
+capture_1()
 
 
 def spell_fix():

@@ -2,6 +2,7 @@ import cv2
 from __init__ import *
 from typing import Optional
 from spotify_audio import run_audio
+from state_control import run_statecontrol
 
 def safe_framepull() -> cv2.VideoCapture:
     try:
@@ -26,6 +27,7 @@ def main():
     while safe_opencheck(cap):
         ret, frame = cap.read()
         run_audio(frame = frame, model_store = model_store, sp = sp)
+        run_statecontrol(frame = frame, model_store = model_store, sp = sp)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

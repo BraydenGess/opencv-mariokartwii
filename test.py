@@ -6,11 +6,14 @@ from development.state_detection.state_detector import StateDetector
 
 def main():
     frame = cv2.imread('development/Images/MenuScreen/characters/characters_0.png')
+    #frame = frame[20:120, 100:700]
+    #cv2.imwrite('test.png',frame)
+    #exit()
     while True:
         models = dict()
         models['state_detector'] = StateDetector(model_path = 'production/models/menu_detection.pth')
-        screen = models['state_detector'].predict(frame)
-        print(screen)
+        screen,confidence = models['state_detector'].predict(frame)
+        print(screen,confidence)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

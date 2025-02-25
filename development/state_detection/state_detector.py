@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F  # Import softmax function
 from torchvision import transforms
 from PIL import Image
 from development.state_detection.train_state_detector import SimpleCNN
@@ -8,14 +9,14 @@ class StateDetector:
     def __init__(self, model_path=None, class_names=None):
         self.model_path = model_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.class_names =  ['characters', 'controller', 'drift', 'homescreen', 'main',
-                             'players', 'startrace', 'vehicles', 'vs', 'None']
+        self.class_names =  ['black','characters', 'controller', 'drift', 'homescreen', 'main',
+                             'players', 'startrace', 'vehicles', 'vs']
         self.model = None
         self.setup()
 
         # Define transformations (fixing the missing self.transform)
         self.transform = transforms.Compose([
-            transforms.Lambda(lambda img: img.crop((100, 20, 800, 160))),  # Crop
+            transforms.Lambda(lambda img: img.crop((100, 20, 700, 120))),  # Crop
             transforms.Resize((128, 128)),  # Resize
             transforms.ToTensor(),  # Convert to tensor
             transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize
@@ -29,7 +30,7 @@ class StateDetector:
         print("Model loaded successfully!")
 
     def predict(self, frame):
-        """Predicts the class of a given image frame."""
+        """Predicts the class of a given image frame with confidence score."""
         # Convert NumPy array (if needed) to PIL image
         if isinstance(frame, torch.Tensor):
             frame = frame.cpu().numpy()
@@ -41,13 +42,16 @@ class StateDetector:
 
         # Make the prediction
         with torch.no_grad():
-            output = self.model(img)
+            output = self.model(img)  # Raw model outputs (logits)
 
-        # Get the predicted class index
-        _, predicted_class = torch.max(output, 1)
+        # Convert logits to probabilities using softmax
+        probabilities = F.softmax(output, dim=1)
+        print(probabilities)
+        # Get the predicted class and confidence score
+        confidence, predicted_class = torch.max(probabilities, 1)  # Get max probability & class index
 
         # Map to class name if available
         if self.class_names:
-            return self.class_names[predicted_class.item()]
+            return self.class_names[predicted_class.item()], confidence.item()  # Return class and confidence
 
-        return predicted_class.item()  # Return class index if no names are provided
+        return predicted_class.item(), confidence.item()
