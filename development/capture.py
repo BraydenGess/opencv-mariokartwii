@@ -9,7 +9,7 @@ def capture_10():
         print(frame)
         count += 1
         if count % 3 == 0:
-            file_name = 'DryDryRuins'
+            file_name = 'MushroomGorge'
             cv.imwrite(f'Images/RawCourses/{file_name}_{pic}.png',frame)
             pic += 1
         if count == 30:
