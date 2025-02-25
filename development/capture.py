@@ -6,20 +6,19 @@ def capture_10():
     count = 0
     while cap.isOpened():
         ret, frame = cap.read()
-        print(frame)
         count += 1
-        if count % 3 == 0:
-            file_name = 'MushroomGorge'
-            cv.imwrite(f'Images/RawCourses/{file_name}_{pic}.png',frame)
+        if count % 12 == 0:
+            file_name = 'BowsersCastle_score'
+            cv.imwrite(f'development/Images/RawCourses/{file_name}_{pic}.png',frame)
             pic += 1
-        if count == 30:
+        if count == 240:
             break
 
 def capture_1():
     cap = cv.VideoCapture(0)
     ret, frame = cap.read()
-    file_name = 'Unlabeled_0'
-    cv.imwrite(f'Images/MenuScreen/{file_name}.png', frame)
+    file_name = 'homescreen_4'
+    cv.imwrite(f'development/Images/HomeScreen/{file_name}.png', frame)
 
 capture_10()
 
