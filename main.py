@@ -1,11 +1,15 @@
 import cv2
 from __init__ import *
-from spotify_audio import run_audio
 from typing import Optional
+from spotify_audio import run_audio
 
 def safe_framepull() -> cv2.VideoCapture:
-    cap = cv2.VideoCapture(0)
-    return cap
+    try:
+        cap = cv2.VideoCapture(0)
+        return cap
+    except Exception as e:
+        return e
+
 
 def main():
     model_store = ModelStore()
