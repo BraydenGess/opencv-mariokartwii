@@ -11,14 +11,21 @@ def safe_framepull() -> cv2.VideoCapture:
         return e
 
 
+def safe_opencheck(cap: cv2.VideoCapture) -> bool:
+    try:
+        return cap.isOpened()
+    except Exception as e:
+        return False
+
+
 def main():
     model_store = ModelStore()
     sp = SpotifyPlayer()
     cap = safe_framepull()
 
-    while cap.isOpened():
+    while safe_opencheck(cap):
         ret, frame = cap.read()
-        run_audio(frame, model_store, sp)
+        run_audio(frame = frame, model_store = model_store, sp = sp)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

@@ -24,4 +24,4 @@ def play_music(frame: np.ndarray, model_store: ModelStore, sp: SpotifyPlayer):
 
 def run_audio(frame: np.ndarray, model_store: ModelStore, sp: SpotifyPlayer):
     pause_toggle(frame)
-    play_music(frame, model_store, sp)
+    play_music(frame = frame, model_store = model_store, sp = sp)
