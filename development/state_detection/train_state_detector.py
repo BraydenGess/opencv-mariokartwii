@@ -1,189 +1,109 @@
 import torch
+from torchvision import datasets, transforms
+import torchvision.transforms as transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader, ConcatDataset
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
-from PIL import Image
-import os
-from pathlib import Path
-from state_detector import StateDetector
-from datetime import datetime
 import matplotlib.pyplot as plt
+import cv2
 
-
-class StateDataset(Dataset):
-    def __init__(self, data_dir, transform=None):
-        self.data_dir = Path(data_dir)
-        self.transform = transform
-        self.images = []
-        self.labels = []
-
-        # Load data (Opening, Pause, Score)
-        # TODO define the dataset structure
-        # data_dir
-        #   -opening
-        #   -pause
-        #   -score
-        #   -none
-
-        # Opening screen images
-        opening_path = self.data_dir / 'opening'
-        for img_path in opening_path.glob('*.png'):
-            self.images.append(str(img_path))
-            self.labels.append(3) # TODO determine the return code structure (integers?)
-
-        # Pause screen images
-        pause_path = self.data_dir / 'pause'
-        for img_path in pause_path.glob('*.png'):
-            self.images.append(str(img_path))
-            self.labels.append(2)
-
-        # Score screen images
-        score_path = self.data_dir / 'score'
-        for img_path in score_path.glob('*.png'):
-            self.images.append(str(img_path))
-            self.labels.append(1)
-
-        # None screen images
-        none_path = self.data_dir / 'none'
-        for img_path in none_path.glob('*.png'):
-            self.images.append(str(img_path))
-            self.labels.append(0)
-
-    def __len__(self):
-        return len(self.images)
-    
-    def __getitem__(self, idx):
-        img_path = self.images[idx]
-        image = Image.open(img_path).convert('RGB')
-        label = self.labels[idx]
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image, torch.tensor(label, dtype=torch.long)
-    
-
-def train_model(data_dir, num_epochs=50, batch_size=32, learning_rate=0.001):
-    # Set device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
-    
-    # Data transforms
+def main():
+    # Define transformations (resize, normalize, convert to tensor)
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Resize to standard size
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Lambda(lambda img: img.crop((100, 20, 800, 160))),  # Crop (left, top, right, bottom)
+        transforms.Resize((128, 128)),  # Resize images
+        transforms.ToTensor(),  # Convert to tensor
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize
     ])
 
-    # Create datasets
-    full_dataset = StateDataset(data_dir, transform=transform)
-    train_size = int(0.8 * len(full_dataset))
-    val_size = len(full_dataset) - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        full_dataset, [train_size, val_size]
-    )
+    # Load dataset
+    menu_screen_dataset = datasets.ImageFolder(root="development/Images/MenuScreen/", transform=transform)
+    none_dataset = datasets.ImageFolder(root="development/Images/None", transform=transform)
 
-    # Create data loaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    dataset = ConcatDataset([menu_screen_dataset, none_dataset])
+    dataset_classes = menu_screen_dataset.classes + none_dataset.classes
 
-    # Initialize model, loss function, and optimizer
-    model = StateDetector().to(device)
-    criterion = nn.CrossEntropyLoss()  # Change to CrossEntropyLoss for multi-class
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-    # Track training history
-    history = {
-        'train_loss': [],
-        'val_loss': [],
-        'val_accuracy': []
-    }
+    # Split into train and validation sets
+    train_size = int(0.8 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
 
-    best_val_acc = 0.0
-    best_model_state = None
+    # Data loaders
+    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
+
+    # Check class names
+    print(f"Classes: {dataset_classes}")
+
+    class SimpleCNN(nn.Module):
+        def __init__(self, num_classes):
+            super(SimpleCNN, self).__init__()
+            self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
+            self.relu = nn.ReLU()
+            self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
+            self.fc1 = nn.Linear(32 * 32 * 32, 128)  # Adjusted for 128x128 input size
+            self.fc2 = nn.Linear(128, num_classes)
+
+        def forward(self, x):
+            x = self.pool(self.relu(self.conv1(x)))
+            x = self.pool(self.relu(self.conv2(x)))
+            x = x.view(x.size(0), -1)  # Flatten
+            x = self.relu(self.fc1(x))
+            x = self.fc2(x)
+            return x
+
+    # Get number of classes
+    num_classes = len(dataset_classes)
+    model = SimpleCNN(num_classes)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    # Loss function and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # Training loop
+    num_epochs = 15
     for epoch in range(num_epochs):
         model.train()
-        train_loss = 0.0
-        
+        running_loss = 0.0
+
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
-            
-            optimizer.zero_grad()
-            outputs = model(images)  # No need to squeeze for multi-class
+
+            # Forward pass
+            outputs = model(images)
             loss = criterion(outputs, labels)
+
+            # Backpropagation
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            
-            train_loss += loss.item()
-        
-        # Validation
-        model.eval()
-        val_loss = 0.0
-        correct = 0
-        total = 0
-        
-        with torch.no_grad():
-            for images, labels in val_loader:
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                val_loss += criterion(outputs, labels).item()
-                
-                # Use argmax for multi-class prediction
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-        
-        # Calculate metrics
-        avg_train_loss = train_loss / len(train_loader)
-        avg_val_loss = val_loss / len(val_loader)
-        val_accuracy = 100 * correct / total
-        
-        # Update history
-        history['train_loss'].append(avg_train_loss)
-        history['val_loss'].append(avg_val_loss)
-        history['val_accuracy'].append(val_accuracy)
-        
-        # Track best model state
-        if val_accuracy > best_val_acc:
-            best_val_acc = val_accuracy
-            best_model_state = model.state_dict().copy()
-            print(f'New best validation accuracy: {val_accuracy:.2f}%')
-        
-        print(f'Epoch [{epoch+1}/{num_epochs}]')
-        print(f'Train Loss: {avg_train_loss:.4f}')
-        print(f'Val Loss: {avg_val_loss:.4f}')
-        print(f'Val Accuracy: {val_accuracy:.2f}%')
-    
-    # Save best model at the end of training
-    if best_model_state is not None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        model_path = f'models/state_detector_{timestamp}.pth'
-        os.makedirs('models', exist_ok=True)
-        torch.save(best_model_state, model_path)
-        print(f'\nSaved best model to {model_path} (validation accuracy: {best_val_acc:.2f}%)')
 
-    # Plot training history
-    plt.figure(figsize=(10, 5))
-    plt.subplot(1, 2, 1)
-    plt.plot(history['train_loss'], label='Train Loss')
-    plt.plot(history['val_loss'], label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-    
-    plt.subplot(1, 2, 2)
-    plt.plot(history['val_accuracy'], label='Validation Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy (%)')
-    plt.legend()
-    
-    plt.tight_layout()
-    plt.savefig('training_history.png')
-    plt.close()
+            running_loss += loss.item()
 
-if __name__ == '__main__':
-    data_dir = 'state_data'
-    train_model(data_dir)
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}")
+
+    print("Training complete!")
+
+    model.eval()
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for images, labels in val_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    torch.save(model.state_dict(), 'production/models/menu_detection.pth')
+    print('Model Saved')
+
+
+if __name__ == "__main__":
+    main()
