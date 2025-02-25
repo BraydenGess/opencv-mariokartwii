@@ -1,6 +1,8 @@
-import random
 import cv2
-
+import random
+import numpy as np
+from __init__ import *
+from typing import Optional
 
 def pause_toggle(frame):
     #pause = predict(frame)
@@ -10,7 +12,8 @@ def pause_toggle(frame):
         # don't pause
     pass
 
-def play_music(frame, model_store, sp):
+
+def play_music(frame: np.ndarray, model_store: ModelStore, sp: SpotifyPlayer):
     course_name, confidence, text_detections = model_store.models['course_detector'].detect_course(frame)
     if course_name:
         if course_name != sp.course_queued:
@@ -18,8 +21,7 @@ def play_music(frame, model_store, sp):
             num = random.randint(1,100)
             cv2.imwrite(f'development/triggers/{course_name}_{num}.png', frame)
 
-    return 0
 
-def run_audio(frame, model_store, sp):
+def run_audio(frame: np.ndarray, model_store: ModelStore, sp: SpotifyPlayer):
     pause_toggle(frame)
     play_music(frame, model_store, sp)
