@@ -6,12 +6,13 @@ def capture_10():
     count = 0
     while cap.isOpened():
         ret, frame = cap.read()
+        print(frame)
         count += 1
         if count % 3 == 0:
-            file_name = 'N64BowsersCastle'
-            cv.imwrite(f'Images/Courses/{file_name}_{pic}.png',frame)
+            file_name = 'DryDryRuins'
+            cv.imwrite(f'Images/RawCourses/{file_name}_{pic}.png',frame)
             pic += 1
-        if count == 650:
+        if count == 30:
             break
 
 def capture_1():
@@ -19,24 +20,26 @@ def capture_1():
     ret, frame = cap.read()
     file_name = 'Unlabeled_0'
     cv.imwrite(f'Images/MenuScreen/{file_name}.png', frame)
-    print('yes')
+
+capture_10()
 
 
-import os
+def spell_fix():
+    import os
 
-# Path to the folder containing the files
-folder_path = 'Images/Courses/GrumbleVolcano'
+    # Path to the folder containing the files
+    folder_path = 'Images/Courses/GrumbleVolcano'
 
-# Loop through all the files in the folder
-for filename in os.listdir(folder_path):
-    # Check if the file matches the pattern 'DSPeachBeach_xx.jpg'
-    if filename.startswith('GrumbleVolcanp_') and filename.endswith('.png'):
-        # Construct the new filename by replacing 'Beach' with 'Gardens'
-        new_filename = filename.replace('GrumbleVolcanp', 'GrumbleVolcano')
-        # Get the full path of the current and new file
-        old_file = os.path.join(folder_path, filename)
-        new_file = os.path.join(folder_path, new_filename)
+    # Loop through all the files in the folder
+    for filename in os.listdir(folder_path):
+        # Check if the file matches the pattern 'DSPeachBeach_xx.jpg'
+        if filename.startswith('GrumbleVolcanp_') and filename.endswith('.png'):
+            # Construct the new filename by replacing 'Beach' with 'Gardens'
+            new_filename = filename.replace('GrumbleVolcanp', 'GrumbleVolcano')
+            # Get the full path of the current and new file
+            old_file = os.path.join(folder_path, filename)
+            new_file = os.path.join(folder_path, new_filename)
 
-        # Rename the file
-        os.rename(old_file, new_file)
-        print(f'Renamed: {filename} -> {new_filename}')
+            # Rename the file
+            os.rename(old_file, new_file)
+            print(f'Renamed: {filename} -> {new_filename}')
