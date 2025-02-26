@@ -23,11 +23,12 @@ def main():
     model_store = ModelStore()
     sp = SpotifyPlayer()
     cap = safe_framepull()
+    state_detect = True
 
     while safe_opencheck(cap):
         ret, frame = cap.read()
         run_audio(frame = frame, model_store = model_store, sp = sp)
-        run_statecontrol(frame = frame, model_store = model_store, sp = sp)
+        state_detect = run_statecontrol(frame = frame, model_store = model_store, sp = sp, state_detect = state_detect)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
