@@ -5,8 +5,8 @@ from __init__ import *
 from typing import Optional
 
 def control(screen: str, sp: SpotifyPlayer, state_detect: bool) -> bool:
-    #state_detect controls whether the models check.
-    #Should only be valid states if after main is detected and before startrace closes the menu
+    # state_detect controls whether the models check.
+    # Should only be valid states if after main is detected and before startrace closes the menu
     if screen == 'main':
         state_detect = True
         if sp.course_queued != "Opening":
