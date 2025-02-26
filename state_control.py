@@ -12,8 +12,15 @@ def control(screen: str, sp: SpotifyPlayer, state_detect: bool) -> bool:
         if sp.course_queued != "Opening":
             sp.queue_newsong(course_name = "Opening")
         return state_detect
+
     if state_detect:
-        if screen == 'startrace':
+        if screen == 'characters':
+            # do character stuff
+            pass
+        elif screen == 'vehicles':
+            # do vehicle stuff
+            pass
+        elif screen == 'startrace':
             state_detect = False
     return state_detect
 
