@@ -1,6 +1,8 @@
-from __init__ import *
+#from __init__ import *
 import os
 from pathlib import Path
+import spotipy
+from spotipy import SpotifyOAuth
 
 
 script_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent
