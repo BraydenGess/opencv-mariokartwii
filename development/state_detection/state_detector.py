@@ -6,9 +6,9 @@ from PIL import Image
 from development.state_detection.train_state_detector import SimpleCNN
 
 class StateDetector:
-    def __init__(self, model_path=None, class_names=None):
+    def __init__(self, model_path=None, class_names=None, device = None):
         self.model_path = model_path
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.class_names =  ['black','characters', 'controller', 'drift', 'homescreen', 'main',
                              'players', 'startrace', 'vehicles', 'vs']
         self.model = None
@@ -27,7 +27,7 @@ class StateDetector:
         self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
         self.model.to(self.device)
         self.model.eval()  # Set to evaluation mode
-        print("Model loaded successfully!")
+        #print("Model loaded successfully!")
 
     def predict(self, frame):
         """Predicts the class of a given image frame with confidence score."""
@@ -46,7 +46,6 @@ class StateDetector:
 
         # Convert logits to probabilities using softmax
         probabilities = F.softmax(output, dim=1)
-        print(probabilities)
         # Get the predicted class and confidence score
         confidence, predicted_class = torch.max(probabilities, 1)  # Get max probability & class index
 

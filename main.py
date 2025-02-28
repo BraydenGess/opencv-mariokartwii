@@ -1,38 +1,59 @@
 import cv2
-from __init__ import *
+import time
+import torch
+import queue
+import threading
 from typing import Optional
-from spotify_audio import run_audio
-from state_control import run_statecontrol
 
-def safe_framepull() -> cv2.VideoCapture:
-    try:
-        cap = cv2.VideoCapture(0)
-        return cap
-    except Exception as e:
-        return e
+from __init__ import *
+from spotify_audio import course_detect
+from state_control import state_detect
 
 
-def safe_opencheck(cap: cv2.VideoCapture) -> bool:
-    try:
-        return cap.isOpened()
-    except Exception as e:
-        return False
+def select_device():
+    if torch.backends.mps.is_available():
+        return torch.device("mps")  # macOS Apple Silicon
+    elif torch.cuda.is_available():
+        return torch.device("cuda")  # NVIDIA GPUs
+    else:
+        return torch.device("cpu")
+
+
+def update_frames(cap, frame_queue):
+    while cap.isOpened():
+        ret, new_frame = cap.read()
+        if not ret:
+            break
+        if not frame_queue.empty():
+            frame_queue.get_nowait()
+        frame_queue.put(new_frame)
+    cap.release()
 
 
 def main():
-    model_store = ModelStore()
+    device = select_device()
+    model_store = ModelStore(device = device)
     sp = SpotifyPlayer()
-    cap = safe_framepull()
-    state_detect = True
+    cap = cv2.VideoCapture(0)
 
-    while safe_opencheck(cap):
-        ret, frame = cap.read()
-        run_audio(frame = frame, model_store = model_store, sp = sp)
-        state_detect = run_statecontrol(frame = frame, model_store = model_store, sp = sp, state_detect = state_detect)
+    frame_queue = queue.Queue(maxsize=1)
+    state_trigger = False
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    frame_thread = threading.Thread(target = update_frames, args = (cap, frame_queue), daemon = True)
+    course_thread = threading.Thread(target = course_detect, args=(frame_queue, model_store, sp), daemon=True)
+    state_thread = threading.Thread(target = state_detect, args=(frame_queue, model_store, sp, state_trigger), daemon = True)
 
+    frame_thread.start()
+    course_thread.start()
+    state_thread.start()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Exiting...")
+
+    cap.release()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

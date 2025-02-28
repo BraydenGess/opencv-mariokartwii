@@ -1,17 +1,18 @@
 import cv2
+import queue
 import random
 import numpy as np
 from __init__ import *
 from typing import Optional
 
-def control(screen: str, sp: SpotifyPlayer, state_detect: bool) -> bool:
+def control(screen: str, sp: SpotifyPlayer, state_trigger: bool) -> bool:
     # state_detect controls whether the models check.
     # Should only be valid states if after main is detected and before startrace closes the menu
     if screen == 'main':
-        state_detect = True
+        state_trigger = True
         if sp.course_queued != "Opening":
             sp.queue_newsong(course_name = "Opening")
-        return state_detect
+        return state_trigger
 
     if state_detect:
         if screen == 'characters':
@@ -21,12 +22,14 @@ def control(screen: str, sp: SpotifyPlayer, state_detect: bool) -> bool:
             # do vehicle stuff
             pass
         elif screen == 'startrace':
-            state_detect = False
-    return state_detect
+            state_trigger = False
+    return state_trigger
 
 
-def run_statecontrol(frame: np.ndarray, model_store: ModelStore, sp: SpotifyPlayer, state_detect: bool) -> bool:
-    screen, confidence = model_store.models['state_detector'].predict(frame)
-    if confidence >= 0.995:
-        state_detect = control(screen = screen, sp = sp, state_detect = state_detect)
-    return state_detect
+def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore,
+                                                    sp: SpotifyPlayer, state_trigger: bool) -> bool:
+    while True:
+        frame = frame_queue.get()
+        screen, confidence = model_store.models['state_detector'].predict(frame)
+        if confidence >= 0.995:
+            state_trigger = control(screen = screen, sp = sp, state_trigger = state_trigger)

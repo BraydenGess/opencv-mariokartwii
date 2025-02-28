@@ -9,13 +9,16 @@ from development.course_detection.course_detection import CourseDetector
 from development.state_detection.state_detector import StateDetector
 
 class ModelStore():
-    def __init__(self):
+    def __init__(self, device = 'cpu'):
         self.models = {}
+        self.device = device
         self.load_models()
 
     def load_models(self):
-        self.models['course_detector'] = CourseDetector(flag_model_path='development/course_detection/models/flag_detector_20250221_122742.pth')
-        self.models['state_detector'] = StateDetector(model_path = 'production/models/menu_detection.pth')
+        flg_path = 'development/course_detection/models/flag_detector_20250221_122742.pth'
+        state_path = 'production/models/menu_detection.pth'
+        self.models['course_detector'] = CourseDetector(flag_model_path = flg_path, device = self.device)
+        self.models['state_detector'] = StateDetector(model_path = state_path, device = self.device)
 
 class Song():
     def __init__(self,song_name,uri,img):
@@ -47,15 +50,19 @@ class SpotifyPlayer():
             self.spotify.volume(volume_percent = 100, device_id = None)
 
     def skip_tosong(self, song_uri: str):
+        user_queue = self.spotify.queue().get('queue', [])
+        song_names = [element['name'] for element in user_queue if 'name' in element]
+        song_uris = [element['uri'] for element in user_queue if 'name' in element]
         self.min_volume()
         user_queue = self.spotify.queue()['queue']
-        time.sleep(0.1)
+        time.sleep(0.05)
         for element in user_queue:
             self.spotify.next_track()
             if song_uri == element['uri']:
                 self.max_volume()
                 break
         self.max_volume()
+
 
     def queue_songs(self, songs: List[Song]):
         for song in songs:
@@ -78,7 +85,7 @@ class SpotifyPlayer():
     def queue_newsong(self, course_name: str):
         song = self.playlist[course_name].song_queue.popleft()
         next_song = self.playlist[course_name].song_queue.popleft()
-        self.queue_songs(songs = [self.get_song(song), self.get_song(next_song)])
+        self.queue_songs(songs = [self.get_song(next_song), self.get_song(song)])
         self.course_queued = course_name
         self.playlist[self.course_queued].song_queue.append(song)
         self.playlist[self.course_queued].song_queue.appendleft(next_song)
@@ -92,7 +99,7 @@ class SpotifyPlayer():
             course_name = data[0]
             data[-1] = data[-1].strip()
             course_songs = data[1:]
-            #random.shuffle(course_songs)
+            random.shuffle(course_songs)
             q = deque()
             for j in range(len(course_songs)):
                 q.append(course_songs[j])

@@ -129,7 +129,8 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
     def __init__(self, flag_model_path, psm=6, 
                  text_match_confidence=0.65,  # Minimum confidence for text matching
                  binary_threshold_min=100,   # Lower bound for binary threshold
-                 binary_threshold_max=250):  # Upper bound for binary threshold
+                 binary_threshold_max=250,# Upper bound for binary threshold
+                 device = None):
         """Initialize the course detector with configurable parameters"""
         self.text_roi = (1000, 900, 800, 100) 
         
@@ -137,6 +138,7 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
         self.text_match_confidence = text_match_confidence
         self.binary_threshold_min = binary_threshold_min
         self.binary_threshold_max = binary_threshold_max
+        self.device = device
         
         # Known course names for matching
         self.course_names = [
@@ -175,7 +177,8 @@ class CourseDetector: # DEFAULT VALUES ARE THE BEST CONFIGURATION I FOUND
         ]
         
         # Setup CNN-based flag detection
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+        if self.device == None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         #  ^ FOR BRADY THIS IS A PROBLEM LINE ^ there is some torch command to run with "mps" instead of "cpu" for devices without cuda
         self.flag_detector = SimpleFlagDetector().to(self.device)
         self.flag_detector.load_state_dict(torch.load(flag_model_path, map_location=self.device))
