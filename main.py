@@ -19,7 +19,7 @@ def select_device():
         return torch.device("cpu")
 
 
-def update_frames(cap, frame_queue):
+def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue):
     while cap.isOpened():
         ret, new_frame = cap.read()
         if not ret:
