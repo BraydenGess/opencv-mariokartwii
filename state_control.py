@@ -13,34 +13,36 @@ def pause_toggle(screen: str, sp: SpotifyPlayer) -> None:
         if sp.is_paused:
             sp.resume()
 
+def character_detect(frame, model_store, gp):
+    predictions = model_store.models['character_detector'].predict(frame)
+    for i in range(len(predictions)):
+        region = predictions[i]
+        if region[2] >= 0.95:
+            gp.characters[i] = region[1]
 
-def control(screen: str, sp: SpotifyPlayer, state_trigger: bool) -> bool:
+
+def control(frame, model_store, screen: str, sp: SpotifyPlayer, gp) -> bool:
     pause_toggle(screen = screen, sp = sp)
 
     if screen == 'main':
-        state_trigger = True
+        gp.main_state = 0
         if sp.course_queued != "Opening":
             sp.queue_newsong(course_name = "Opening")
-        return state_trigger
 
     # state_detect controls whether the models check.
     # Should only be valid states if after main is detected and before startrace closes the menu
-    if state_detect:
+    if gp.main_state >= 0:
         if screen == 'characters':
-            # do character stuff
-            pass
+            gp.main_state = 1
+            character_detect(frame, model_store, gp)
         elif screen == 'vehicles':
-            # do vehicle stuff
+            gp.main_state = 2
             pass
-        elif screen == 'startrace':
-            state_trigger = False
-    return state_trigger
 
 
-def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore,
-                                                    sp: SpotifyPlayer, state_trigger: bool) -> bool:
+def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, sp: SpotifyPlayer, gp) -> bool:
     while True:
         frame = frame_queue.get()
         screen, confidence = model_store.models['state_detector'].predict(frame)
-        if confidence >= 0.995:
-            state_trigger = control(screen = screen, sp = sp, state_trigger = state_trigger)
+        if confidence >= 0.965:
+            control(frame = frame, model_store = model_store,screen = screen, sp = sp, gp = gp)

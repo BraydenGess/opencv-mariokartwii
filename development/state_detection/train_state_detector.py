@@ -31,6 +31,7 @@ def main():
     # Define transformations (resize, normalize, convert to tensor)
     transform = transforms.Compose([
         transforms.Lambda(lambda img: img.crop((100, 20, 700, 120))),  # Crop (left, top, right, bottom)
+        #transforms.Lambda(lambda img: img.crop((100, 20, 800, 175))),
         transforms.Resize((128, 128)),  # Resize images
         transforms.ToTensor(),  # Convert to tensor
     ])

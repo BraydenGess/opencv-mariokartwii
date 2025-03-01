@@ -1,5 +1,6 @@
 from development.character_detection.train_character_detector import SimpleCNN
 import torch
+import torch.nn.functional as F
 import cv2
 from torchvision import transforms
 from torch.autograd import Variable
@@ -12,8 +13,9 @@ transform = transforms.Compose([
 ])
 
 class CharacterDetector:
-    def __init__(self, model_path = None):
+    def __init__(self, model_path = None, device = 'cpu'):
         self.model_path = model_path
+        self.device = device
         self.model = self.load_model()
 
     def load_model(self):
@@ -24,8 +26,8 @@ class CharacterDetector:
 
     # Function to preprocess the image and make predictions
     def predict(self, frame):
-        classes = ['BabyDaisy', 'BabyLuigi', 'BabyMario', 'BabyPeach', 'Birdo', 'Bowser', 'BowserJr', 'Daisy',
-                   'DiddyKong', 'DonkeyKong', 'DryBones', 'DryBowser', 'FunkyKong', 'KingBoo', 'KoopaTroopa',
+        classes = ['Baby Daisy', 'Baby Luigi', 'Baby Mario', 'Baby Peach', 'Birdo', 'Bowser', 'Bowser Jr', 'Daisy',
+                   'Diddy Kong', 'Donkey Kong', 'Dry Bones', 'Dry Bowser', 'Funky Kong', 'King Boo', 'Koopa Troopa',
                    'Luigi', 'Mario', 'Peach', 'Rosalina', 'Toad', 'Toadette', 'TransRob', 'Waluigi', 'Wario', 'Yoshi']
         class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
         # Read the image using OpenCV
@@ -51,11 +53,12 @@ class CharacterDetector:
             # Make prediction
             with torch.no_grad():
                 outputs = self.model(cropped_image)  # Pass the image through the model
-                _, predicted = torch.max(outputs, 1)  # Get the class with the highest score
+                probabilities = F.softmax(outputs, dim=1)  # Apply softmax to get probabilities
+                confidence, predicted = torch.max(probabilities, 1)  # Get the highest probability and its index
                 predicted_class = predicted.item()  # Convert tensor to scalar
 
                 # Get the class label from the index
                 class_label = list(class_to_idx.keys())[predicted_class]
-                region_predictions.append((region_name, class_label))
+                region_predictions.append((region_name, class_label, confidence.item()))  # Store confidence as well
 
         return region_predictions

@@ -1,12 +1,27 @@
 import os
+import csv
 import time
 import random
 import spotipy
 from typing import Dict, List, Optional
 from collections import deque
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
+
 from development.course_detection.course_detection import CourseDetector
 from development.state_detection.state_detector import StateDetector
+from development.character_detection.character_detector import CharacterDetector
+
+class GPINFO():
+    def __init__(self):
+        self.main_state = 0
+        self.course_state = 0
+        self.characters = ['Baby Mario','Baby Mario','Baby Mario','Baby Mario']
+        self.characterstats = self.csv_todict(file = 'nextgenstats/stats/characterstats.csv')
+
+    def csv_todict(self, file):
+        with open(file) as f:
+            dictionary = {row[0]: list(map(int, row[1:])) for row in csv.reader(f)}
+        return dictionary
 
 class ModelStore():
     def __init__(self, device = 'cpu'):
@@ -17,8 +32,10 @@ class ModelStore():
     def load_models(self):
         flg_path = 'development/course_detection/models/flag_detector_20250221_122742.pth'
         state_path = 'production/models/menu_detection.pth'
+        character_path = 'production/models/character_classifier.pth'
         self.models['course_detector'] = CourseDetector(flag_model_path = flg_path, device = self.device)
         self.models['state_detector'] = StateDetector(model_path = state_path, device = self.device)
+        self.models['character_detector'] = CharacterDetector(model_path = character_path, device = self.device)
 
 class Song():
     def __init__(self,song_name,uri,img):

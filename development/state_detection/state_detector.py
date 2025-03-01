@@ -17,9 +17,11 @@ class StateDetector:
         # Define transformations (fixing the missing self.transform)
         self.transform = transforms.Compose([
             transforms.Lambda(lambda img: img.crop((100, 20, 700, 120))),  # Crop
+            #transforms.Lambda(lambda img: img.crop((100, 20, 800, 175))),
             transforms.Resize((128, 128)),  # Resize
             transforms.ToTensor(),  # Convert to tensor
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize
+            #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize
+            transforms.Normalize(mean=[0, 0, 0], std=[1, 1, 1])
         ])
 
     def setup(self):

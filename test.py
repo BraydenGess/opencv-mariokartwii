@@ -1,9 +1,11 @@
 import cv2
 from development.character_detection.character_detector import CharacterDetector
 
-frame = cv2.imread(filename = 'development/Images/Characters/KoopaTroopa+DryBones+Mario+Luigi_0.png')
+frame = cv2.imread(filename = 'development/Images/MenuScreen/homescreen/homescreen_0.png')
+#frame = cv2.imread(filename = 'development/Images/MenuScreen/main/main_0.png')
 frame2 = cv2.imread(filename = 'development/Images/Characters/Toadette+KoopaTroopa+DryBones+Mario_0.png')
 frame3 = cv2.imread(filename = 'development/Images/Characters/Toad+Toadette+KoopaTroopa+DryBones_0.png')
+
 
 cd = CharacterDetector(model_path = 'production/models/character_classifier.pth')
 p = cd.predict(frame2)
