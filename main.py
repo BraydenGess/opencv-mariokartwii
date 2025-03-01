@@ -54,9 +54,11 @@ def main():
     try:
         graphics.run(sp, gp)  # This contains the event loop now
     except Exception as e:
+        import traceback
         print("Error in graphics loop:", e)
+        traceback.print_exc()  # Print the full error traceback
         pygame.quit()
-        sys.exit()  # Ensure full quit on error
+        sys.exit()
 
     try:
         while True:

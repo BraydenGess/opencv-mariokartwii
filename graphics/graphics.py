@@ -85,12 +85,25 @@ class Graphics():
             character_color = self.colors[i]
             text = font.render(character_name, True, character_color)  # White text
             text_rect = text.get_rect(topleft=(50, y_offset))  # Position text with some padding
-
             self.display_surface.blit(text, text_rect)  # Draw text onto the display surface
             y_offset += 40
+
             character_stats = gp.characterstats[character_name]
             for j in range(len(character_stats)):
                 stats[j].append(character_stats[j])
+
+            if gp.main_state == 2:
+                vehicle_name = gp.vehicles[i]
+                character_color = self.colors[i]
+                text = font.render(vehicle_name, True, character_color)  # White text
+                text_rect = text.get_rect(topleft=(150, y_offset-40))  # Position text with some padding
+                self.display_surface.blit(text, text_rect)
+
+                vehicle_stats = gp.vehiclestats[vehicle_name]
+                for k in range(len(vehicle_stats)):
+                    print(i,k)
+                    stats[k][i] += vehicle_stats[k]
+
         texts, rectangles = self.draw_charts(stats, x_buffer, y_buffer)
         self.write_rectangles(rectangles)
         self.write_text(texts)

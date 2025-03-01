@@ -13,6 +13,14 @@ def pause_toggle(screen: str, sp: SpotifyPlayer) -> None:
         if sp.is_paused:
             sp.resume()
 
+def vehicle_detect(frame, model_store, gp):
+    predictions = model_store.models['vehicle_detector'].predict(frame)
+    for i in range(len(predictions)):
+        region = predictions[i]
+        if region[2] >= 0.95:
+            gp.vehicles[i] = region[1]
+
+
 def character_detect(frame, model_store, gp):
     predictions = model_store.models['character_detector'].predict(frame)
     for i in range(len(predictions)):
@@ -37,6 +45,7 @@ def control(frame, model_store, screen: str, sp: SpotifyPlayer, gp) -> bool:
             character_detect(frame, model_store, gp)
         elif screen == 'vehicles':
             gp.main_state = 2
+            vehicle_detect(frame, model_store, gp)
             pass
 
 

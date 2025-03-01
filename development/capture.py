@@ -8,8 +8,9 @@ def capture_10():
         ret, frame = cap.read()
         count += 1
         if count % 18 == 0:
-            file_name = 'BabyMario+BabyLuigi+BabyPeach+TransRob'
-            cv.imwrite(f'development/Images/Characters/{file_name}_{pic}.png',frame)
+            file_name = 'Phantom'
+            efile_name = f'{file_name}+{file_name}+{file_name}+{file_name}'
+            cv.imwrite(f'development/Images/Vehicles/{efile_name}_{pic}.png',frame)
             pic += 1
         if count == 73:
             break
@@ -21,7 +22,7 @@ def capture_1():
     cv.imwrite(f'development/Images/None/None/{file_name}.png', frame)
     print(file_name)
 
-capture_1()
+capture_10()
 
 
 def spell_fix():

@@ -17,12 +17,13 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import matplotlib.pyplot as plt
 
+
 # Define the coordinates for the regions
 regions = {
-    'region1': (445, 485, 120, 420),  # Top-left region
-    'region2': (445, 485, 1485, 1785),  # Top-right region
-    'region3': (845, 885, 120, 420),  # Bottom-left region
-    'region4': (845, 885, 1485, 1785)  # Bottom-right region
+    'region1': (432, 512, 305, 855),  # Top-left region
+    'region2': (432, 512, 1045, 1595),  # Top-right region
+    'region3': (797, 877, 305, 855),  # Bottom-left region
+    'region4': (797, 877, 1045, 1595)  # Bottom-right region
 }
 
 
@@ -118,10 +119,10 @@ def predict(image_path, model, class_to_idx):
 
     # Define the regions for cropping (same as during training)
     regions = {
-        'region1': (445, 485, 120, 420),  # Top-left region
-        'region2': (445, 485, 1485, 1785),  # Top-right region
-        'region3': (845, 885, 120, 420),  # Bottom-left region
-        'region4': (845, 885, 1485, 1785)  # Bottom-right region
+        'region1': (432, 512, 305, 855),  # Top-left region
+        'region2': (432, 512, 1045, 1595),  # Top-right region
+        'region3': (797, 877, 305, 855),  # Bottom-left region
+        'region4': (797, 877, 1045, 1595)  # Bottom-right region
     }
 
     # Extract the regions from the image
@@ -148,7 +149,7 @@ def predict(image_path, model, class_to_idx):
 
 # Main function for training and evaluating the model
 def main():
-    image_folder = "development/Images/Characters"  # Path to your folder with images
+    image_folder = "development/Images/Vehicles"  # Path to your folder with images
     batch_size = 8
     num_epochs = 15
 
@@ -192,7 +193,7 @@ def main():
     print("Training complete!")
 
     # Save the model
-    #torch.save(model.state_dict(), 'production/model/character_classifier.pth')
+    torch.save(model.state_dict(), 'production/models/vehicle_classifier.pth')
     print(classes)
     print("Model saved!")
 

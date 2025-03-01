@@ -37,7 +37,7 @@ def main():
     ])
 
     # Load dataset
-    dataset = datasets.ImageFolder(root="development/Images/MenuScreen/", transform=transform)
+    dataset = datasets.ImageFolder(root="development/Images/StateScreen/", transform=transform)
 
 
     # Split into train and validation sets
@@ -98,7 +98,7 @@ def main():
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    torch.save(model.state_dict(), 'production/models/menu_detection.pth')
+    #torch.save(model.state_dict(), 'production/models/menu_detection.pth')
     print('Model Saved')
 
 
