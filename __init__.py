@@ -39,7 +39,18 @@ class SpotifyPlayer():
         self.songkey_dict = {}
         self.support_volume = False
         self.course_queued = None
+        self.is_paused = False
         self.spotify_setup()
+
+    def pause(self):
+        if self.spotify.current_playback()['is_playing']:
+            self.spotify.pause_playback(device_id=None)
+            self.is_paused = True
+
+    def resume(self):
+        if not self.spotify.current_playback()['is_playing']:
+            self.spotify.start_playback(device_id=None)
+            self.is_paused = False
 
     def min_volume(self):
         if self.support_volume:
@@ -56,13 +67,16 @@ class SpotifyPlayer():
         self.min_volume()
         user_queue = self.spotify.queue()['queue']
         time.sleep(0.05)
+        abort_count = 0
         for element in user_queue:
             self.spotify.next_track()
             if song_uri == element['uri']:
                 self.max_volume()
                 break
+            abort_count += 1
+            if abort_count == 3:
+                break # prevent infinit skipping - Spotify API slow
         self.max_volume()
-
 
     def queue_songs(self, songs: List[Song]):
         for song in songs:
@@ -149,3 +163,5 @@ class SpotifyPlayer():
         self.playlist = course_dict
         self.songkey_dict = songkey_dict
         self.spotify_safetycheck()
+        self.support_volume = self.spotify.current_playback()['device']['supports_volume']
+

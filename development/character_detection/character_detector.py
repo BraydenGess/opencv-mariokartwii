@@ -1,0 +1,61 @@
+from development.character_detection.train_character_detector import SimpleCNN
+import torch
+import cv2
+from torchvision import transforms
+from torch.autograd import Variable
+import numpy as np
+
+transform = transforms.Compose([
+    transforms.ToPILImage(),  # Convert NumPy array to PIL image
+    transforms.Resize((128, 128)),  # Resize images to match model input
+    transforms.ToTensor(),  # Convert to tensor
+])
+
+class CharacterDetector:
+    def __init__(self, model_path = None):
+        self.model_path = model_path
+        self.model = self.load_model()
+
+    def load_model(self):
+        model = SimpleCNN(num_classes = 25)
+        model.load_state_dict(torch.load(self.model_path))  # Load the saved weights
+        model.eval()  # Set the model to evaluation mode
+        return model
+
+    # Function to preprocess the image and make predictions
+    def predict(self, frame):
+        classes = ['BabyDaisy', 'BabyLuigi', 'BabyMario', 'BabyPeach', 'Birdo', 'Bowser', 'BowserJr', 'Daisy',
+                   'DiddyKong', 'DonkeyKong', 'DryBones', 'DryBowser', 'FunkyKong', 'KingBoo', 'KoopaTroopa',
+                   'Luigi', 'Mario', 'Peach', 'Rosalina', 'Toad', 'Toadette', 'TransRob', 'Waluigi', 'Wario', 'Yoshi']
+        class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
+        # Read the image using OpenCV
+
+        # Define the regions for cropping (same as during training)
+        regions = {
+            'region1': (445, 485, 120, 420),  # Top-left region
+            'region2': (445, 485, 1485, 1785),  # Top-right region
+            'region3': (845, 885, 120, 420),  # Bottom-left region
+            'region4': (845, 885, 1485, 1785)  # Bottom-right region
+        }
+
+        # Extract the regions from the image
+        cropped_regions = {region_name: frame[y1:y2, x1:x2] for region_name, (y1, y2, x1, x2) in regions.items()}
+
+        # Prepare the labeled regions
+        region_predictions = []
+        for region_name, cropped_image in cropped_regions.items():
+            # Apply transformations (resize, convert to tensor)
+            cropped_image = transform(cropped_image)
+            cropped_image = cropped_image.unsqueeze(0)  # Add batch dimension (1, C, H, W)
+
+            # Make prediction
+            with torch.no_grad():
+                outputs = self.model(cropped_image)  # Pass the image through the model
+                _, predicted = torch.max(outputs, 1)  # Get the class with the highest score
+                predicted_class = predicted.item()  # Convert tensor to scalar
+
+                # Get the class label from the index
+                class_label = list(class_to_idx.keys())[predicted_class]
+                region_predictions.append((region_name, class_label))
+
+        return region_predictions
