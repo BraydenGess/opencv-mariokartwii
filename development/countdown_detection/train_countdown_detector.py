@@ -16,8 +16,8 @@ class SimpleCNN(nn.Module):
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
-        self.fc1 = nn.Linear(32 * 32 * 32, 128)  # Adjusted for 128x128 input size
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc1 = nn.Linear(64 * 64 * 32, 256)  # Adjusted for 128x128 input size
+        self.fc2 = nn.Linear(256, num_classes)
 
     def forward(self, x):
         x = self.pool(self.relu(self.conv1(x)))
@@ -32,8 +32,9 @@ def main():
     transform = transforms.Compose([
         transforms.Lambda(lambda img: img.crop((100, 190, 850, 340))),  # Crop (left, top, right, bottom)
         transforms.Grayscale(num_output_channels=1),
-        transforms.Resize((128, 128)),  # Resize images
+        transforms.Resize((256, 256)),  # Resize images
         transforms.ToTensor(),  # Convert to tensor
+        transforms.Normalize(mean=[0], std=[1])
     ])
 
     # Load dataset
@@ -63,7 +64,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # Training loop
-    num_epochs = 15
+    num_epochs = 10
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0

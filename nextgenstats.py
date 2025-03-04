@@ -11,12 +11,13 @@ def run_stats(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, sp:
         frame = frame_queue.get()
         if gp.course_state >= 1:
             prediction, confidence = model_store.models['countdown_detector'].predict(frame)
-            if confidence > 0.99:
+            if confidence > 0.98:
+                print(prediction, confidence)
                 if prediction == 'GO':
                     gp.course_state = 2
                 if prediction == 'FINISH':
                     gp.course_state = 3
         if gp.course_state == 2:
-            predictions = model_store.models['placement_detector'].predict(frame)
+            #predictions = model_store.models['placement_detector'].predict(frame)
             #run highlight algo
             pass
