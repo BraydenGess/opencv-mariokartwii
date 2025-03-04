@@ -1,7 +1,7 @@
 import cv2
 from development.countdown_detection.countdown_detector import CountdownDetector
 
-frame = cv2.imread(filename ='development/Images/Countdown/FINISH/FINISH_LuigiCircuit_328.png')
+frame = cv2.imread(filename ='development/Images/Countdown/GO/GO_LuigiCircuit_17.png')
 frame9 = cv2.imread(filename ='development/Images/Placement/12+11+10+1_GrumbleVolcano_95.png')
 frame10 = cv2.imread(filename ='development/Images/Placement/12+11+10+1_GrumbleVolcano_95.png')
 

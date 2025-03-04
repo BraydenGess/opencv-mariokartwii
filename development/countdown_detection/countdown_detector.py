@@ -17,7 +17,7 @@ class CountdownDetector:
         self.transform = transforms.Compose([
             transforms.Lambda(lambda img: img.crop((100, 190, 850, 340))),  # Crop
             transforms.Grayscale(num_output_channels=1),
-            transforms.Resize((256, 256)),  # Resize
+            transforms.Resize((128, 128)),  # Resize
             transforms.ToTensor(),  # Convert to tensor
         ])
 
