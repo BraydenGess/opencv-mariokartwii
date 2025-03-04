@@ -7,12 +7,11 @@ def capture_10():
     while cap.isOpened():
         ret, frame = cap.read()
         count += 1
-        if count % 18 == 0:
-            file_name = 'Phantom'
-            efile_name = f'{file_name}+{file_name}+{file_name}+{file_name}'
-            cv.imwrite(f'development/Images/Vehicles/{efile_name}_{pic}.png',frame)
+        if count % 1 == 0:
+            file_name = 'MapleTreewaye'
+            cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
             pic += 1
-        if count == 73:
+        if count == 100:
             break
 
 def capture_1():

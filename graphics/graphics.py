@@ -5,7 +5,7 @@ import time
 from __init__ import *
 
 class Graphics():
-    def __init__(self, screen_setting='fullscreen'):
+    def __init__(self, screen_setting='fllscreen'):
         self.screen_setting = screen_setting
         self.x, self.y = None, None
         self.display_surface = None
@@ -101,7 +101,6 @@ class Graphics():
 
                 vehicle_stats = gp.vehiclestats[vehicle_name]
                 for k in range(len(vehicle_stats)):
-                    print(i,k)
                     stats[k][i] += vehicle_stats[k]
 
         texts, rectangles = self.draw_charts(stats, x_buffer, y_buffer)

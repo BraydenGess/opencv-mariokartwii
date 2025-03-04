@@ -1,12 +1,15 @@
 import cv2
 from development.character_detection.character_detector import CharacterDetector
 
-frame = cv2.imread(filename ='development/Images/Vehicles/Flame Runner+Flame Runner+Flame Runner+Flame Runner_0.png')
+frame = cv2.imread(filename ='development/Images/Placement/12+11+1+10_MoonviewHighway_411.png')
+frame9 = cv2.imread(filename ='development/Images/Placement/12+11+10+1_GrumbleVolcano_95.png')
+frame10 = cv2.imread(filename ='development/Images/Placement/12+11+10+1_GrumbleVolcano_95.png')
 
-frame1 = frame[432:512,305:855]
-frame2 = frame[432:512,1045:1595]
-frame3 = frame[797:877,305:855]
-frame4 = frame[797:877,1045:1595]
+
+frame1 = frame[370:510,100:320]
+frame2 = frame10[370:510,1580:1800]
+frame3 = frame9[880:1020,100:320]
+frame4 = frame[880:1020,1580:1800]
 
 if frame is None:
     print("Error: Could not load image.")

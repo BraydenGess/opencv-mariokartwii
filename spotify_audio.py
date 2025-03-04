@@ -16,7 +16,7 @@ def course_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore,
                 sp.queue_newsong(course_name)
 
                 gp.main_state = -1
-                gp.course_state = 0
+                gp.course_state = 1
 
                 ### Record what triggered it for model fine-tuning
                 num = random.randint(1,100)

@@ -11,6 +11,7 @@ from __init__ import *
 from spotify_audio import course_detect
 from state_control import state_detect
 from graphics.graphics import Graphics
+from nextgenstats import run_stats
 
 
 def select_device():
@@ -46,10 +47,13 @@ def main():
     frame_thread = threading.Thread(target = update_frames, args = (cap, frame_queue), daemon = True)
     course_thread = threading.Thread(target = course_detect, args=(frame_queue, model_store, sp, gp), daemon=True)
     state_thread = threading.Thread(target = state_detect, args=(frame_queue, model_store, sp, gp), daemon = True)
+    stat_thread = threading.Thread(target = run_stats, args=(frame_queue, model_store, sp, gp), daemon = True)
+
 
     frame_thread.start()
     course_thread.start()
     state_thread.start()
+    stat_thread.start()
 
     try:
         graphics.run(sp, gp)  # This contains the event loop now
