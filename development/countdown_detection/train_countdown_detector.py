@@ -12,7 +12,7 @@ import cv2
 class SimpleCNN(nn.Module):
     def __init__(self, num_classes):
         super(SimpleCNN, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
         self.relu = nn.ReLU()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
@@ -31,6 +31,7 @@ def main():
     # Define transformations (resize, normalize, convert to tensor)
     transform = transforms.Compose([
         transforms.Lambda(lambda img: img.crop((100, 190, 850, 340))),  # Crop (left, top, right, bottom)
+        transforms.Grayscale(num_output_channels=1),
         transforms.Resize((128, 128)),  # Resize images
         transforms.ToTensor(),  # Convert to tensor
     ])

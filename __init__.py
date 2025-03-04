@@ -12,6 +12,7 @@ from development.state_detection.state_detector import StateDetector
 from development.character_detection.character_detector import CharacterDetector
 from development.vehicle_detection.vehicle_detector import VehicleDetector
 from development.placement_detection.placement_detector import PlacementDetector
+from development.countdown_detection.countdown_detector import CountdownDetector
 
 
 class GPINFO():
@@ -39,12 +40,15 @@ class ModelStore():
         state_path = 'production/models/menu_detection.pth'
         character_path = 'production/models/character_classifier.pth'
         vehicle_path = 'production/models/vehicle_classifier.pth'
+        countdown_path = 'production/models/countdown_detection.pth'
         placement_path = 'production/models/placement_detection.pth'
         self.models['course_detector'] = CourseDetector(flag_model_path = flg_path, device = self.device)
         self.models['state_detector'] = StateDetector(model_path = state_path, device = self.device)
         self.models['character_detector'] = CharacterDetector(model_path = character_path, device = self.device)
         self.models['vehicle_detector'] = VehicleDetector(model_path=vehicle_path, device=self.device)
+        self.models['countdown_detector'] = CountdownDetector(model_path=countdown_path, device=self.device)
         self.models['placement_detector'] = PlacementDetector(model_path=placement_path, device=self.device)
+
 
 class Song():
     def __init__(self,song_name,uri,img):

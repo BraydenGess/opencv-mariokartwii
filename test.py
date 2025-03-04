@@ -1,10 +1,13 @@
 import cv2
-from development.character_detection.character_detector import CharacterDetector
+from development.countdown_detection.countdown_detector import CountdownDetector
 
-frame = cv2.imread(filename ='development/Images/Countdown/FINISH/FINISH_DKSummite_22.png')
+frame = cv2.imread(filename ='development/Images/Countdown/1/1_KoopaCape_40.png')
 frame9 = cv2.imread(filename ='development/Images/Placement/12+11+10+1_GrumbleVolcano_95.png')
 frame10 = cv2.imread(filename ='development/Images/Placement/12+11+10+1_GrumbleVolcano_95.png')
 
+model = CountdownDetector(model_path = 'production/models/countdown_detection.pth',device = 'mps')
+print(model.predict(frame))
+exit()
 
 frame1 = frame[190:340,100:850]
 frame2 = frame10[370:510,1580:1800]
