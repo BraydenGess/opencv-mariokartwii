@@ -39,7 +39,7 @@ def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue, rolling_queue
                 frame_duration = timestamp - prev_time
                 fps = 1 / frame_duration
             prev_time = timestamp
-        max_rolling_frames = int(fps * 7)
+        max_rolling_frames = int(fps * 12)
         if not frame_queue.empty():
             frame_queue.get_nowait()
         frame_queue.put(new_frame)

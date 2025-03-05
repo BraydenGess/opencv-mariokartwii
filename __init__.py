@@ -21,6 +21,7 @@ class GPINFO():
         self.course_state = 0
         self.characters = ['Baby Mario','Baby Mario','Baby Mario','Baby Mario']
         self.vehicles = ['Bit Bike', 'Bit Bike', 'Bit Bike', 'Bit Bike']
+        self.places = [12, 11, 10, 9]
         self.characterstats = self.csv_todict(file = 'nextgenstats/stats/characterstats.csv')
         self.vehiclestats = self.csv_todict(file = 'nextgenstats/stats/vehiclestats.csv')
 

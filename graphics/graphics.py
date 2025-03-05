@@ -3,6 +3,7 @@ import sys
 import pygame
 import time
 from __init__ import *
+from graphics.highlights import play_highlights
 
 class Graphics():
     def __init__(self, screen_setting='fllscreen'):
@@ -128,16 +129,10 @@ class Graphics():
                 self.display_stats(gp)
             elif gp.course_state == 1:
                 self.course_intro(sp)
-                pass
             elif gp.course_state == 2:
                 self.display_surface.fill((255, 0, 0))
-                # Do course shit
-                pass
             elif gp.course_state == 3:
-                self.display_surface.fill((0, 255, 0))
-                #cours finished
-                pass
-
+                play_highlights(self.display_surface, gp, self.x, self.y)
             pygame.display.update()
 
             ### Exit handling

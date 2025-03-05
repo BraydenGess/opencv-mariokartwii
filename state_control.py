@@ -1,9 +1,24 @@
 import cv2
+import shutil
 import queue
 import random
 import numpy as np
 from __init__ import *
 from typing import Optional
+
+def clear_directory(directory):
+    """Deletes all files and subdirectories inside a directory."""
+    if not os.path.exists(directory):
+        return
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.remove(file_path)  # Delete file
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)  # Delete folder and its contents
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
 
 def pause_toggle(screen: str, sp: SpotifyPlayer) -> None:
     if screen == 'homescreen':
@@ -34,6 +49,7 @@ def control(frame, model_store, screen: str, sp: SpotifyPlayer, gp) -> bool:
 
     if screen == 'main':
         gp.main_state = 0
+        clear_directory('nextgenstats/highlights')
         if sp.course_queued != "Opening":
             sp.queue_newsong(course_name = "Opening")
 
