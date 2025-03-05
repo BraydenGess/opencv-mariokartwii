@@ -5,7 +5,7 @@ import pygame
 import numpy as np
 
 def load_highlight_videos():
-    """Finds all highlight videos in the directory, sorted by modification time."""
+    """Finds all highlight videos in the directory, sorted alphabetically by filename."""
     HIGHLIGHT_DIR = 'nextgenstats/highlights'
     if not os.path.exists(HIGHLIGHT_DIR):
         os.makedirs(HIGHLIGHT_DIR, exist_ok=True)
@@ -13,8 +13,7 @@ def load_highlight_videos():
 
     highlight_files = sorted(
         [f for f in os.listdir(HIGHLIGHT_DIR) if f.endswith(".mp4")],
-        key=lambda x: os.path.getmtime(os.path.join(HIGHLIGHT_DIR, x)),
-        reverse=True
+        key=lambda x: x.lower()  # Sort alphabetically, case-insensitive
     )
     return [os.path.join(HIGHLIGHT_DIR, f) for f in highlight_files]
 
@@ -60,8 +59,10 @@ def play_highlights(display_surface, gp, x, y):
     if not highlight_videos:
         return
 
-    for video_path in highlight_videos:
-        while gp.course_state == 3:
-            play_video(display_surface, video_path, x, y)  # Play current highlight
+    while gp.course_state == 3:
+        for video_path in highlight_videos:
             if ((gp.course_state != 3) or (gp.main_state == 0)):
                 break  # Exit the loop if course_state is no longer 3
+            play_video(display_surface, video_path, x, y)  # Play current highlight
+        return
+    return

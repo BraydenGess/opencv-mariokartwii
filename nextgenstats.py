@@ -5,6 +5,28 @@ import numpy as np
 from __init__ import *
 from typing import Optional
 
+
+def calculate_highlightimportance(p0: int,p1: int) -> str:
+    ### Counts place changes giving more weight to being higher up
+    n0,n1 = (13-p0)**2, (13-p1)**2
+    delta = abs(n1-n0)
+    if delta >= (12**2 - 5**2): # 1 <-> 8, 119
+        return 'a'
+    elif delta >= (12**2 - 6**2): # 1 <-> 7, 108
+        return 'b'
+    elif delta >= (12**2 - 7**2): # 1 <-> 6, 95
+        return 'c'
+    elif delta >= (12**2 - 8**2): # 1 <-> 5, 80
+        return 'd'
+    elif delta >= (12**2 - 9**2): # 1 <-> 4, 63
+        return 'e'
+    elif delta >= (11**2 - 8**2): # 2 <-> 5, 57
+        return 'f'
+    elif abs(p0-p1) >= 5:
+        return 'g'
+    return False
+
+
 def save_video(frames, output_path, fps):
     """Saves frames to a video file."""
     if not frames:
@@ -23,33 +45,34 @@ def save_video(frames, output_path, fps):
 
 
 def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], history: list, gp):
-    timestamp = time.time()
-
-    # Remove old history entries (> 5 seconds ago)
-    history = [inst for inst in history if timestamp - inst[4] < 12]
+    org_timestamp = time.time()
+    # Remove old history entries (> 12 seconds ago)
+    history = [inst for inst in history if org_timestamp - inst[4] < 12]
 
     for i in range(len(prediction)):
         place, confidence = prediction[i][1], prediction[i][2]
         if confidence >= 0.95:
             gp.places[i] = place
 
+    cur_timestamp = time.time()
     for instance in history:
-        time_diff = timestamp - instance[4]
-        if time_diff >= 8:
+        time_diff = cur_timestamp - instance[4]
+        if time_diff >= 10:
             for i in range(len(gp.places)):
                 place = int(gp.places[i])
-                if abs(place - instance[i]) >= 3:
+                rank = calculate_highlightimportance(place, instance[i])
+                if rank:
                     rolling_frames = [f[0] for f in list(rolling_queue.queue)]
-                    output_file = os.path.join(f"nextgenstats/highlights/highlight_{i}_{int(time.time())}.mp4")
-                    save_video(rolling_frames, output_file, fps=30)
-                    history.clear()
+                    output_file = os.path.join(f"nextgenstats/highlights/{rank}_{i}_{int(time.time())}.mp4")
+                    save_video(rolling_frames, output_file, fps=24)
+                    #history.clear()
                     return history
 
     new_instance = []
     for i in range(len(gp.places)):
         new_instance.append(int(gp.places[i]))
 
-    history.append(new_instance + [timestamp])
+    history.append(new_instance + [org_timestamp])
     return history
 
 
@@ -60,10 +83,10 @@ def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[n
         frame = frame_queue.get()
         if gp.course_state >= 1:
             prediction, confidence = model_store.models['countdown_detector'].predict(frame)
-            if confidence > 0.98:
-                if prediction == 'GO':
+            if prediction == 'GO':
+                if confidence >= 0.97:
                     gp.course_state = 2
-                if prediction == 'FINISH':
+            if prediction == 'FINISH':
                     gp.course_state = 3
         if gp.course_state == 2:
             prediction = model_store.models['placement_detector'].predict(frame)

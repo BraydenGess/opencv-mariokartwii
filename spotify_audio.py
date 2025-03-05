@@ -1,13 +1,12 @@
+import os
 import cv2
 import queue
 import random
+import shutil
 import numpy as np
 from typing import Optional
 
 from __init__ import *
-
-import os
-import shutil
 
 def clear_directory(directory):
     """Deletes all files and subdirectories inside a directory."""
@@ -22,6 +21,7 @@ def clear_directory(directory):
                 shutil.rmtree(file_path)  # Delete folder and its contents
         except Exception as e:
             print(f"Failed to delete {file_path}: {e}")
+
 
 def course_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, sp: SpotifyPlayer, gp : GPINFO):
     while True:

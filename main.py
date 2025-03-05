@@ -14,7 +14,7 @@ from graphics.graphics import Graphics
 from nextgenstats import run_stats
 
 
-def select_device():
+def select_device() -> torch.device:
     if torch.backends.mps.is_available():
         return torch.device("mps")  # macOS Apple Silicon
     elif torch.cuda.is_available():

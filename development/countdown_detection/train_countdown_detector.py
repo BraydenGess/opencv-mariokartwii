@@ -1,3 +1,4 @@
+import cv2
 import torch
 from torchvision import datasets, transforms
 import torchvision.transforms as transforms
@@ -5,8 +6,6 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, ConcatDataset
 import torch.nn as nn
 import torch.optim as optim
-import matplotlib.pyplot as plt
-import cv2
 
 
 class SimpleCNN(nn.Module):

@@ -195,4 +195,3 @@ class SpotifyPlayer():
         self.songkey_dict = songkey_dict
         self.spotify_safetycheck()
         self.support_volume = self.spotify.current_playback()['device']['supports_volume']
-

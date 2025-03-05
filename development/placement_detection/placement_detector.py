@@ -1,10 +1,8 @@
 from development.placement_detection.train_placement_detection import SimpleCNN
 import torch
 import torch.nn.functional as F
-import cv2
 from torchvision import transforms
-from torch.autograd import Variable
-import numpy as np
+
 
 transform = transforms.Compose([
     transforms.ToPILImage(),  # Convert NumPy array to PIL image
