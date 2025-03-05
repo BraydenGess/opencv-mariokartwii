@@ -23,14 +23,29 @@ def select_device():
         return torch.device("cpu")
 
 
-def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue):
+def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue, rolling_queue: queue.Queue):
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps == 0:
+        prev_time, fps = None, 30
+    else:
+        frame_duration = 1 / fps
     while cap.isOpened():
         ret, new_frame = cap.read()
         if not ret:
             break
+        timestamp = time.time() if fps != 0 else prev_time + frame_duration if prev_time else time.time()
+        if fps == 0:
+            if prev_time:
+                frame_duration = timestamp - prev_time
+                fps = 1 / frame_duration
+            prev_time = timestamp
+        max_rolling_frames = int(fps * 7)
         if not frame_queue.empty():
             frame_queue.get_nowait()
         frame_queue.put(new_frame)
+        rolling_queue.put((new_frame, timestamp))
+        while rolling_queue.qsize() > max_rolling_frames:
+            rolling_queue.get()
     cap.release()
 
 
@@ -43,11 +58,13 @@ def main():
     cap = cv2.VideoCapture(0)
 
     frame_queue = queue.Queue(maxsize=1)
+    rolling_queue = queue.Queue()
 
-    frame_thread = threading.Thread(target = update_frames, args = (cap, frame_queue), daemon = True)
+    frame_thread = threading.Thread(target = update_frames, args = (cap, frame_queue, rolling_queue), daemon = True)
     course_thread = threading.Thread(target = course_detect, args=(frame_queue, model_store, sp, gp), daemon=True)
     state_thread = threading.Thread(target = state_detect, args=(frame_queue, model_store, sp, gp), daemon = True)
-    stat_thread = threading.Thread(target = run_stats, args=(frame_queue, model_store, sp, gp), daemon = True)
+    stat_thread = threading.Thread(target = run_stats, args=(frame_queue, rolling_queue, model_store, sp, gp),
+                                   daemon = True)
 
 
     frame_thread.start()

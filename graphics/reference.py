@@ -1,82 +1,65 @@
 import os
 import cv2
 import time
-
-def capture_frames(save_path="frames/", duration=3, fps=30):
-    """Capture frames from OpenCV and save them as image files."""
-    cap = cv2.VideoCapture(0)  # Open webcam
-    os.makedirs(save_path, exist_ok=True)  # Ensure directory exists
-
-    frame_count = 0
-    start_time = time.time()
-
-    while time.time() - start_time < duration:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Save frame as image file
-        frame_filename = os.path.join(save_path, f"frame_{frame_count:04d}.jpg")
-        cv2.imwrite(frame_filename, frame)
-        frame_count += 1
-
-    cap.release()
-    print(f"Captured {frame_count} frames and saved them to {save_path}")
-
 import pygame
 import numpy as np
 
-def load_frames_from_disk(folder_path="frames/"):
-    """Loads saved image frames from disk into a list."""
-    frame_files = sorted(os.listdir(folder_path))  # Ensure correct order
-    frames = []
+HIGHLIGHT_DIR = "nextgenstats/highlights"
 
-    for file in frame_files:
-        file_path = os.path.join(folder_path, file)
-        frame = cv2.imread(file_path)
-        if frame is None:
-            continue
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
-        frames.append(frame)
+def load_latest_highlight():
+    """Finds the latest saved highlight video in the directory."""
+    if not os.path.exists(HIGHLIGHT_DIR):
+        os.makedirs(HIGHLIGHT_DIR, exist_ok=True)
+        return None
 
-    print(f"Loaded {len(frames)} frames from {folder_path}")
-    return frames
+    highlight_files = sorted(
+        [f for f in os.listdir(HIGHLIGHT_DIR) if f.endswith(".mp4")],
+        key=lambda x: os.path.getmtime(os.path.join(HIGHLIGHT_DIR, x)),
+        reverse=True
+    )
 
-def play_movie(display_surface, frames, fps=30):
-    """Plays saved frames on the Pygame window."""
-    if not frames:
-        print("Error: No frames to display!")
+    return os.path.join(HIGHLIGHT_DIR, highlight_files[0]) if highlight_files else None
+
+def play_video(display_surface, video_path):
+    """Plays a video file on the Pygame window."""
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print("Error: Could not open video file!")
         return
 
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30
     clock = pygame.time.Clock()
-    frame_index = 0
-    running = True
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_q, pygame.K_ESCAPE):
-                    running = False
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break  # Stop when video ends
 
-        # Convert OpenCV frame to Pygame surface
-        frame_surface = pygame.surfarray.make_surface(np.rot90(frames[frame_index], 3))
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        frame_surface = pygame.surfarray.make_surface(np.rot90(frame, 3))
         display_surface.blit(frame_surface, (0, 0))
         pygame.display.update()
 
-        frame_index = (frame_index + 1) % len(frames)  # Loop through frames
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                cap.release()
+                return
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_q, pygame.K_ESCAPE):
+                    cap.release()
+                    return  # Quit playback
+
         clock.tick(fps)
 
+    cap.release()
 
 class Graphics():
-    def __init__(self, screen_setting='fullscreen'):
+    def __init__(self, screen_setting='fullscreenx'):
         self.screen_setting = screen_setting
         self.x, self.y = None, None
         self.display_surface = None
-        self.frames = []  # Store frames
+        self.last_highlight = None
         self.setup()
-        self.capture_frames()  # Capture frames before running
 
     def setup(self):
         pygame.init()
@@ -86,17 +69,17 @@ class Graphics():
         self.display_surface = pygame.display.set_mode((self.x, self.y), flags)
         pygame.display.set_caption("OpenCV MarioKart")
 
-    def capture_frames(self):
-        """Capture and save frames before running the game."""
-        capture_frames()  # Save frames to disk
-        self.frames = load_frames_from_disk()  # Load them into memory
-
     def run(self):
         running = True
-        t1 = time.time()
-
         while running:
             self.display_surface.fill((0, 0, 0))
+
+            latest_highlight = load_latest_highlight()
+
+            if latest_highlight and latest_highlight != self.last_highlight:
+                self.last_highlight = latest_highlight
+                print(f"Playing highlight: {latest_highlight}")
+                play_video(self.display_surface, latest_highlight)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -105,13 +88,11 @@ class Graphics():
                     if event.key in (pygame.K_q, pygame.K_ESCAPE):
                         running = False  # Quit if Q or ESC is pressed
 
-            if time.time() - t1 > 5:
-                play_movie(self.display_surface, self.frames)  # Play recorded frames
-
             pygame.display.update()
-
+            time.sleep(1)  # Check for new highlights every second
 
 if __name__ == "__main__":
     game = Graphics()
     game.run()
+
 
