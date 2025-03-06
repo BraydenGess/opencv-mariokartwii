@@ -7,8 +7,8 @@ def capture_10():
     while cap.isOpened():
         ret, frame = cap.read()
         count += 1
-        if count % 1 == 0:
-            file_name = 'KoopaCapee'
+        if count % 2 == 0:
+            file_name = 'KoopaCapeF'
             cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
             pic += 1
         if count == 100:

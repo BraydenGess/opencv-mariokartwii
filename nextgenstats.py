@@ -22,7 +22,7 @@ def calculate_highlightimportance(p0: int,p1: int) -> str:
         return 'e'
     elif delta >= (11**2 - 8**2): # 2 <-> 5, 57
         return 'f'
-    elif abs(p0-p1) >= 5:
+    elif abs(p0-p1) >= 4:
         return 'g'
     return False
 
@@ -47,12 +47,14 @@ def save_video(frames, output_path, fps):
 def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], history: list, gp):
     org_timestamp = time.time()
     # Remove old history entries (> 12 seconds ago)
-    history = [inst for inst in history if org_timestamp - inst[4] < 12]
+    history = [inst for inst in history if org_timestamp - inst[4] < 14]
+    update = False
 
     for i in range(len(prediction)):
         place, confidence = prediction[i][1], prediction[i][2]
         if confidence >= 0.95:
             gp.places[i] = place
+            update = True
 
     cur_timestamp = time.time()
     for instance in history:
@@ -60,19 +62,23 @@ def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], hi
         if time_diff >= 10:
             for i in range(len(gp.places)):
                 place = int(gp.places[i])
+                p0, p1 = place, instance[i]
                 rank = calculate_highlightimportance(place, instance[i])
                 if rank:
-                    rolling_frames = [f[0] for f in list(rolling_queue.queue)]
-                    output_file = os.path.join(f"nextgenstats/highlights/{rank}_{i}_{int(time.time())}.mp4")
+                    rolling_frames = [f[0] for f in list(rolling_queue.queue)[:int(len(rolling_queue.queue) * 0.85)]]
+                    output_file = os.path.join(f"nextgenstats/highlights/{rank}_{i}_{int(time.time())}_{p0}_{p1}.mp4")
                     save_video(rolling_frames, output_file, fps=24)
                     #history.clear()
                     return history
+        else:
+            break
 
-    new_instance = []
-    for i in range(len(gp.places)):
-        new_instance.append(int(gp.places[i]))
+    if update:
+        new_instance = []
+        for i in range(len(gp.places)):
+            new_instance.append(int(gp.places[i]))
 
-    history.append(new_instance + [org_timestamp])
+        history.append(new_instance + [org_timestamp])
     return history
 
 
@@ -82,12 +88,17 @@ def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[n
     while True:
         frame = frame_queue.get()
         if gp.course_state >= 1:
-            prediction, confidence = model_store.models['countdown_detector'].predict(frame)
-            if prediction == 'GO':
-                if confidence >= 0.97:
-                    gp.course_state = 2
-            if prediction == 'FINISH':
-                    gp.course_state = 3
+            labels = model_store.models['countdown_detector'].predict(frame)
+            for i in range(len(labels)):
+                [region, prediction, confidence] = labels[i]
+                if i == 0:
+                    if confidence >= 0.98:
+                        if prediction == 'GO':
+                            gp.course_state = 2
+                if prediction == 'FINISH':
+                    if confidence >= 0.99:
+                        if gp.course_state == 2:
+                            gp.course_state = 3
         if gp.course_state == 2:
             prediction = model_store.models['placement_detector'].predict(frame)
             history = scan_highlights(prediction, rolling_queue, history, gp)
