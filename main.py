@@ -10,18 +10,18 @@ from typing import Optional
 from __init__ import *
 from spotify_audio import course_detect
 from state_control import state_detect
-from graphics.graphics import Graphics
 from nextgenstats import run_stats
+from graphics.graphics import Graphics
 
 
 def select_device() -> torch.device:
     """
-    Select the best available computing device for PyTorch
+    Selects the best available computing device for PyTorch
 
     Returns: torch.device
     """
     if torch.backends.mps.is_available():
-        return torch.device("mps")  # macOS Apple Silicon
+        return torch.device("mps")   # macOS Apple Silicon
     elif torch.cuda.is_available():
         return torch.device("cuda")  # NVIDIA GPUs
     return torch.device("cpu")
