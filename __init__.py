@@ -2,6 +2,7 @@ import os
 import csv
 import time
 import random
+import shutil
 import spotipy
 from typing import Dict, List, Optional
 from collections import deque
@@ -24,6 +25,20 @@ class GPINFO():
         self.places = [12, 11, 10, 9]
         self.characterstats = self.csv_todict(file = 'nextgenstats/stats/characterstats.csv')
         self.vehiclestats = self.csv_todict(file = 'nextgenstats/stats/vehiclestats.csv')
+
+    def clear_directory(self, directory_path):
+        """Deletes all files and subdirectories inside a directory."""
+        if not os.path.exists(directory_path):
+            return
+        for filename in os.listdir(directory_path):
+            file_path = os.path.join(directory_path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.remove(file_path)  # Delete file
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)  # Delete folder and its contents
+            except Exception as e:
+                print(f"Failed to delete {file_path}: {e}")
 
     def csv_todict(self, file):
         with open(file) as f:
