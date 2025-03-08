@@ -5,9 +5,19 @@ import queue
 import threading
 import random
 from development.countdown_detection.countdown_detector import CountdownDetector
+import os
+import multiprocessing
 
 
-frame = cv2.imread('development/Images/Countdown/FINISH/FINISH_KoopaCapee_34.png')
+
+frame = cv2.imread('production/referenceimages/player_counts/4player.png')
+frame = frame[55:115,535:625]
+cv2.imshow('Sliced Frame', frame)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+exit()
+
+
 frame2 = cv2.imread('development/Images/RawImages/DelfinoSquareF_17.png')
 frame3 = cv2.imread('development/Images/RawImages/KoopaCapeF_12.png')
 model = CountdownDetector(model_path = 'production/models/countdown_detection.pth')

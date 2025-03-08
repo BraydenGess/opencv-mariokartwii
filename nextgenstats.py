@@ -6,25 +6,29 @@ from __init__ import *
 from typing import Optional
 
 
-def calculate_highlightimportance(p0: int,p1: int) -> str:
-    ### Counts place changes giving more weight to being higher up
+def calculate_highlightimportance(p0: int, p1: int) -> str:
+    """
+    Determines the importance of a highlight based on position changes
+    """
     n0,n1 = (13-p0)**2, (13-p1)**2
     delta = abs(n1-n0)
-    if delta >= (12**2 - 5**2): # 1 <-> 8, 119
-        return 'a'
-    elif delta >= (12**2 - 6**2): # 1 <-> 7, 108
-        return 'b'
-    elif delta >= (12**2 - 7**2): # 1 <-> 6, 95
-        return 'c'
-    elif delta >= (12**2 - 8**2): # 1 <-> 5, 80
-        return 'd'
-    elif delta >= (12**2 - 9**2): # 1 <-> 4, 63
-        return 'e'
-    elif delta >= (11**2 - 8**2): # 2 <-> 5, 57
-        return 'f'
-    elif abs(p0-p1) >= 4:
+
+    rankings = {
+        12**2 - 5**2 : 'a', # 1 <-> 8, 119
+        12**2 - 6**2 : 'b', # 1 <-> 7, 108
+        12**2 - 7**2 : 'c',  # 1 <-> 6, 95
+        12**2 - 8**2 : 'd',  # 1 <-> 5, 80
+        12**2 - 9**2 : 'e',  # 1 <-> 4, 63
+        12**2 - 8**2 : 'f',  # 2 <-> 5, 57
+    }
+
+    for threshold in rankings:
+        if delta >= threshold:
+            return rankings[threshold]
+
+    if abs(p0-p1) >= 4:
         return 'g'
-    return False
+    return None
 
 
 def save_video(frames, output_path, fps):
@@ -83,7 +87,7 @@ def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], hi
 
 
 def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[np.ndarray], model_store: ModelStore,
-              sp: SpotifyPlayer, gp) -> bool:
+              sp: SpotifyPlayer, gp: GPINFO) -> bool:
     history = []
     while True:
         frame = frame_queue.get()

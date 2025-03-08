@@ -20,6 +20,7 @@ class GPINFO():
     def __init__(self):
         self.main_state = 0
         self.course_state = 0
+        self.player_count = 4
         self.characters = ['Baby Mario','Baby Mario','Baby Mario','Baby Mario']
         self.vehicles = ['Bit Bike', 'Bit Bike', 'Bit Bike', 'Bit Bike']
         self.places = [12, 11, 10, 9]

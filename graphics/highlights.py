@@ -8,7 +8,9 @@ import re
 
 
 def parse_filename(filename):
-    """Extracts letter, number, and timestamp from the filename."""
+    """
+    Extracts letter, number, and timestamp from the filename
+    """
     match = re.match(r"([a-zA-Z])_(\d+)_(\d+)_.*\.mp4", filename)
     if match:
         letter, number, timestamp = match.groups()
@@ -17,8 +19,10 @@ def parse_filename(filename):
 
 
 def load_highlight_videos():
+    """
+    Loads highlight videos and removes files if a higher letter or newer same letter exists within 3 seconds
+    """
     HIGHLIGHT_DIR = "nextgenstats/highlights"
-    """Loads highlight videos and removes files if a higher letter or newer same letter exists within 3 seconds."""
     if not os.path.exists(HIGHLIGHT_DIR):
         os.makedirs(HIGHLIGHT_DIR, exist_ok=True)
         return []

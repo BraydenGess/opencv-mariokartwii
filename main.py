@@ -1,11 +1,9 @@
 import cv2
 import sys
-import time
 import torch
 import queue
 import pygame
 import threading
-from typing import Optional
 
 from __init__ import *
 from spotify_audio import course_detect
