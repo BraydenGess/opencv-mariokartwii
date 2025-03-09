@@ -4,6 +4,8 @@ import torch
 import queue
 import pygame
 import threading
+import collections
+from collections import deque
 
 from __init__ import *
 from spotify_audio import course_detect
@@ -25,7 +27,7 @@ def select_device() -> torch.device:
     return torch.device("cpu")
 
 
-def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue, rolling_queue: queue.Queue):
+def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue, rolling_queue: collections.deque):
     """"
     Continuously reads frames from a video capture source and updates the frame queues
 
@@ -35,47 +37,40 @@ def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue, rolling_queue
     - rolling_queue (queue.Queue): A queue storing frames with timestamps for historical reference
     """
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
-    frame_duration = 1/fps
-    prev_time = None
+
+    buffer_seconds = 24
+    max_rolling_frames = int(fps * buffer_seconds)
+    frame_count = 0
 
     while cap.isOpened():
         ret, new_frame = cap.read()
         if not ret:
             break
 
-        # Timestamp for accurate frame tracking
-        timestamp = time.time() if fps != 0 else prev_time + frame_duration if prev_time else time.time()
-        if fps == 0:
-            if prev_time:
-                frame_duration = timestamp - prev_time
-                fps = 1 / frame_duration
-            prev_time = timestamp
-
-        # Limit rolling buffer to last 25 seconds of frames
-        buffer_seconds = 25
-        max_rolling_frames = int(fps * buffer_seconds)
-
-        #Keep only the latest frame in frame_queue
+        # Keep only the latest frame in frame_queue
         if not frame_queue.empty():
             frame_queue.get_nowait()
         frame_queue.put(new_frame)
 
         # Maintain rolling queue buffer
-        rolling_queue.put((new_frame, timestamp))
-        while rolling_queue.qsize() > max_rolling_frames:
-            rolling_queue.get()
+        rolling_queue.append((new_frame, frame_count))
+        if len(rolling_queue) > max_rolling_frames:
+            rolling_queue.popleft()  # Remove oldest frame
+        frame_count += 1
+        if frame_count >= 1000:
+            frame_count = 0
 
     cap.release()
 
 
-def initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp):
+def initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp, graphics):
     """
     Initializes and starts all necessary threads.
 
     Parameters:
     - cap (cv2.VideoCapture): The video capture source
     - frame_queue (queue.Queue): Queue for the latest frame
-    - rolling_queue (queue.Queue): Queue for hisotrical frame data
+    - rolling_queue (queue.Queue): Queue for historical frame data
     - model_store (ModelStore): Model container for AI-based processing
     - sp (SpotifyPlayer): Handles music playback
     - gp (GPINFO): Manages game states
@@ -83,8 +78,8 @@ def initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp):
     threads = [
         threading.Thread(target=update_frames, args=(cap, frame_queue, rolling_queue), daemon=True),
         threading.Thread(target=course_detect, args=(frame_queue, model_store, sp, gp), daemon=True),
-        threading.Thread(target=state_detect, args=(frame_queue, model_store, sp, gp), daemon=True),
-        threading.Thread(target=run_stats, args=(frame_queue, rolling_queue, model_store, sp, gp),daemon=True)
+        threading.Thread(target=state_detect, args=(frame_queue, model_store, sp, gp, rolling_queue, graphics), daemon=True),
+        threading.Thread(target=run_stats, args=(frame_queue, rolling_queue, model_store, gp, graphics),daemon=True)
     ]
 
     for thread in threads:
@@ -105,10 +100,10 @@ def main():
 
     # Thread-safe queues for frame handling
     frame_queue = queue.Queue(maxsize=1)
-    rolling_queue = queue.Queue()
+    rolling_queue = deque()
 
     # Start all background threads
-    initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp)
+    initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp, graphics)
 
     try:
         graphics.run(sp, gp)  # This contains the event loop now

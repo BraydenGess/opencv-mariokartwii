@@ -75,7 +75,7 @@ def load_highlight_videos():
     return selected_files
 
 
-def play_video(display_surface, video_path, x, y):
+def play_video(graphics, display_surface, video_path, x, y):
     """Plays a video file on the Pygame window."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -102,11 +102,14 @@ def play_video(display_surface, video_path, x, y):
             frame = frame[:y//2, marg:new_x // 2]
         if player == 3:
             frame = frame[:y//2, new_x // 2:]
-
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
         frame = cv2.resize(frame, (x, y))
         frame_surface = pygame.surfarray.make_surface(np.rot90(frame, 3))
         display_surface.blit(frame_surface, (0, 0))
+
+        txt, txtRect = graphics.create_text('Arial', 32, video_path, (255, 255, 255),
+         (graphics.x*3//4, graphics.y//4), 'center')
+        display_surface.blit(txt, txtRect)
         pygame.display.update()
 
         for event in pygame.event.get():
@@ -123,7 +126,7 @@ def play_video(display_surface, video_path, x, y):
     cap.release()
 
 
-def play_highlights(display_surface, gp, x, y):
+def play_highlights(graphics, display_surface, gp, x, y):
     """Loop through all highlight videos until gp.course_state is not 3."""
     highlight_videos = load_highlight_videos()
     if not highlight_videos:
@@ -133,6 +136,6 @@ def play_highlights(display_surface, gp, x, y):
         for video_path in highlight_videos:
             if ((gp.course_state != 3) or (gp.main_state == 0)):
                 break  # Exit the loop if course_state is no longer 3
-            play_video(display_surface, video_path, x, y)  # Play current highlight
+            play_video(graphics, display_surface, video_path, x, y)  # Play current highlight
         return
     return

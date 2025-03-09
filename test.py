@@ -8,7 +8,15 @@ from development.countdown_detection.countdown_detector import CountdownDetector
 import os
 import multiprocessing
 
+def wrap_difference(a, b, max_value):
+    return min(abs(a - b), max_value - abs(a - b))
 
+print(wrap_difference(998,7,1000))
+print(wrap_difference(7,998,1000))
+print(wrap_difference(7,300,1000))
+
+
+exit()
 
 frame = cv2.imread('production/referenceimages/player_counts/4player.png')
 frame = frame[55:115,535:625]

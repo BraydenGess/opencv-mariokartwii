@@ -4,6 +4,7 @@ import queue
 import numpy as np
 
 from __init__ import *
+from nextgenstats import scan_highlights
 
 
 def pause_toggle(screen: str, sp: SpotifyPlayer) -> None:
@@ -88,12 +89,21 @@ def control(frame, model_store, screen: str, sp: SpotifyPlayer, gp: GPINFO) -> N
             vehicle_detect(frame, model_store, gp)
 
 
-def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, sp: SpotifyPlayer, gp: GPINFO) -> None:
+def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, sp: SpotifyPlayer, gp: GPINFO,
+                 rolling_queue, graphics) -> None:
     """
     Process frames and detect whether state screen is detected
     """
+    history = []
     while True:
         frame = frame_queue.get()
         screen, confidence = model_store.models['state_detector'].predict(frame)
         if confidence >= 0.965:
             control(frame = frame, model_store = model_store, screen = screen, sp = sp, gp = gp)
+
+        ### NextGenStats capability, high I/O so moved here for better threading, fix later
+        if gp.course_state == 2:
+            if rolling_queue:
+                (peak_frame, frame_count) = rolling_queue[-1]
+                prediction = model_store.models['placement_detector'].predict(peak_frame)
+                history = scan_highlights(prediction, rolling_queue, history, gp, frame_count, graphics)

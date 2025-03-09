@@ -132,7 +132,7 @@ class Graphics():
             elif gp.course_state == 2:
                 self.display_surface.fill((255, 0, 0))
             elif gp.course_state == 3:
-                play_highlights(self.display_surface, gp, self.x, self.y)
+                play_highlights(self, self.display_surface, gp, self.x, self.y)
             pygame.display.update()
 
             ### Exit handling

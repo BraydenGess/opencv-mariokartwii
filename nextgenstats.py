@@ -1,6 +1,7 @@
 import cv2
 import queue
 import random
+import threading
 import numpy as np
 from __init__ import *
 from typing import Optional
@@ -31,49 +32,57 @@ def calculate_highlightimportance(p0: int, p1: int) -> str:
     return None
 
 
-def save_video(frames, output_path, fps):
-    """Saves frames to a video file."""
+def save_video(frames, filename, graphics):
+    """
+    Saves frames to a video file.
+    """
     if not frames:
         return
 
+    fps = 30
     height, width, _ = frames[0].shape
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # MP4 format
-    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    out = cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
     for frame in frames:
-        flipped_frame = cv2.flip(frame, 0)
+        flipped_frame = cv2.flip(frame,0)
         out.write(flipped_frame)
 
     out.release()
-    print(f"Saved highlight: {output_path}")
+    print(f"Saved highlight: {filename}")
+
+def wrap_diff(a, b, max_value):
+    return min(abs(a - b), max_value - abs(a - b))
 
 
-def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], history: list, gp):
-    org_timestamp = time.time()
-    # Remove old history entries (> 12 seconds ago)
-    history = [inst for inst in history if org_timestamp - inst[4] < 14]
+def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], history: list, gp, frame_count, graphics):
+    # Remove old history entries (> 14 seconds ago)
+    fps = 30
+    history = [inst for inst in history if wrap_diff(frame_count, inst[4], 1000) < (13*fps)]
+
     update = False
-
     for i in range(len(prediction)):
         place, confidence = prediction[i][1], prediction[i][2]
         if confidence >= 0.95:
             gp.places[i] = place
             update = True
 
-    cur_timestamp = time.time()
     for instance in history:
-        time_diff = cur_timestamp - instance[4]
-        if time_diff >= 10:
+        time_diff = wrap_diff(frame_count,instance[4], 1000)
+        if time_diff >= (8*fps):
             for i in range(len(gp.places)):
                 place = int(gp.places[i])
                 p0, p1 = place, instance[i]
                 rank = calculate_highlightimportance(place, instance[i])
                 if rank:
-                    rolling_frames = [f[0] for f in list(rolling_queue.queue)[:int(len(rolling_queue.queue) * 0.85)]]
-                    output_file = os.path.join(f"nextgenstats/highlights/{rank}_{i}_{int(time.time())}_{p0}_{p1}.mp4")
-                    save_video(rolling_frames, output_file, fps=24)
-                    #history.clear()
-                    return history
+                    rolling_frames = [
+                        f[0] for f in rolling_queue
+                        if ((f[1] >= instance[4]-(2*fps)) and (f[1] <= frame_count+(2*fps)))
+                    ]
+                    length = len(rolling_frames)
+                    if length >= fps*4:
+                        filename = os.path.join(f"nextgenstats/highlights/{rank}_{i}_{int(time.time())}_{p0}_{p1}_{length}.mp4")
+                        save_video(rolling_frames, filename, graphics)
         else:
             break
 
@@ -82,27 +91,29 @@ def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], hi
         for i in range(len(gp.places)):
             new_instance.append(int(gp.places[i]))
 
-        history.append(new_instance + [org_timestamp])
+        history.append(new_instance + [frame_count])
     return history
 
 
 def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[np.ndarray], model_store: ModelStore,
-              sp: SpotifyPlayer, gp: GPINFO) -> bool:
-    history = []
+              gp: GPINFO, graphics):
+    #history = []
+
     while True:
+
         frame = frame_queue.get()
         if gp.course_state >= 1:
             labels = model_store.models['countdown_detector'].predict(frame)
-            for i in range(len(labels)):
-                [region, prediction, confidence] = labels[i]
+            for i, (region, prediction, confidence) in enumerate(labels):
                 if i == 0:
-                    if confidence >= 0.98:
-                        if prediction == 'GO':
-                            gp.course_state = 2
-                if prediction == 'FINISH':
-                    if confidence >= 0.99:
-                        if gp.course_state == 2:
-                            gp.course_state = 3
-        if gp.course_state == 2:
-            prediction = model_store.models['placement_detector'].predict(frame)
-            history = scan_highlights(prediction, rolling_queue, history, gp)
+                    if prediction == 'GO' and confidence >= 0.98:
+                        gp.course_state = 2
+                if prediction == 'FINISH' and confidence >= 0.99 and gp.course_state == 2:
+                    gp.course_state = 3
+
+        #if gp.course_state == 2:
+            #if rolling_queue:
+                #(peak_frame, frame_count) = rolling_queue[-1]
+                #prediction = model_store.models['placement_detector'].predict(peak_frame)
+                #history = scan_highlights(prediction, rolling_queue, history, gp, frame_count, graphics)
+
