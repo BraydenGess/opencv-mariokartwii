@@ -8,7 +8,7 @@ def capture_10():
         ret, frame = cap.read()
         count += 1
         if count % 2 == 0:
-            file_name = 'KoopaCapeF'
+            file_name = '2MooMoo'
             cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
             pic += 1
         if count == 100:
@@ -17,8 +17,8 @@ def capture_10():
 def capture_1():
     cap = cv.VideoCapture(0)
     ret, frame = cap.read()
-    file_name = '4player'
-    cv.imwrite(f'production/ReferenceImages/{file_name}.png', frame)
+    file_name = '2character+'
+    cv.imwrite(f'development/Images/RawImages/{file_name}.png', frame)
     print(file_name)
 
 capture_1()

@@ -25,7 +25,7 @@ class CharacterDetector:
         return model
 
     # Function to preprocess the image and make predictions
-    def predict(self, frame):
+    def predict(self, frame, players):
         classes = ['Baby Daisy', 'Baby Luigi', 'Baby Mario', 'Baby Peach', 'Birdo', 'Bowser', 'Bowser Jr', 'Daisy',
                    'Diddy Kong', 'Donkey Kong', 'Dry Bones', 'Dry Bowser', 'Funky Kong', 'King Boo', 'Koopa Troopa',
                    'Luigi', 'Mario', 'Peach', 'Rosalina', 'Toad', 'Toadette', 'TransRob', 'Waluigi', 'Wario', 'Yoshi']
@@ -39,9 +39,20 @@ class CharacterDetector:
             'region3': (845, 885, 120, 420),  # Bottom-left region
             'region4': (845, 885, 1485, 1785)  # Bottom-right region
         }
+        if players == 2:
+            regions = {
+                'region1': (420, 490, 110, 570),  # Top-left region
+                'region2': (785, 855, 110, 570),  # Top-right region
+            }
 
         # Extract the regions from the image
-        cropped_regions = {region_name: frame[y1:y2, x1:x2] for region_name, (y1, y2, x1, x2) in regions.items()}
+        cropped_regions = dict()
+        for region_name, (y1,y2,x1,x2) in regions.items():
+            namebox = frame[y1:y2, x1:x2]
+            if players == 2:
+                namebox = cv2.resize(namebox,(300,40))
+            cropped_regions[region_name] = namebox
+
 
         # Prepare the labeled regions
         region_predictions = []

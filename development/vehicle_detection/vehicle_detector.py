@@ -25,7 +25,7 @@ class VehicleDetector:
         return model
 
     # Function to preprocess the image and make predictions
-    def predict(self, frame):
+    def predict(self, frame, players = 4):
         classes = ['Bit Bike', 'Blue Falcon', 'Booster Seat', 'Bullet Bike', 'Cheep Charger', 'Classic Dragster',
                    'Daytripper', 'Dolphin Dasher', 'Flame Flyer', 'Flame Runner', 'Honeycoupe', 'Jet Bubble',
                    'Jetsetter', 'Mach Bike', 'Magikruiser', 'Mini Beast', 'Offroader', 'Phantom', 'Piranha Prowler',
@@ -43,9 +43,19 @@ class VehicleDetector:
             'region3': (797, 877, 305, 855),  # Bottom-left region
             'region4': (797, 877, 1045, 1595)  # Bottom-right region
         }
+        if players == 2:
+            regions = {
+                'region1': (420, 495, 425, 920),  # Top-left region
+                'region2': (810, 885, 425, 920),  # Top-right region
+            }
 
         # Extract the regions from the image
-        cropped_regions = {region_name: frame[y1:y2, x1:x2] for region_name, (y1, y2, x1, x2) in regions.items()}
+        cropped_regions = dict()
+        for region_name, (y1, y2, x1, x2) in regions.items():
+            namebox = frame[y1:y2, x1:x2]
+            if players == 2:
+                namebox = cv2.resize(namebox, (800, 80))
+            cropped_regions[region_name] = namebox
 
         # Prepare the labeled regions
         region_predictions = []

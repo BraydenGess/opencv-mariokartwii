@@ -41,7 +41,7 @@ def player_count(frame: np.ndarray, gp: GPINFO) -> None:
     for filename, ref_image in ref_images:
         result = cv2.matchTemplate(binary_frame, ref_image, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
-        if max_val >= 0.95:
+        if max_val >= 0.925:
             gp.player_count = int(filename[0])
 
 
@@ -59,7 +59,7 @@ def character_detect(frame: np.ndarray, model_store: ModelStore, gp: GPINFO) -> 
     """
     Detect characters in the given frame and update GPINFO
     """
-    predictions = model_store.models['character_detector'].predict(frame)
+    predictions = model_store.models['character_detector'].predict(frame = frame, players = gp.player_count)
     for i, (region, character_name, confidence) in enumerate(predictions):
         if confidence >= 0.95:
             gp.characters[i] = character_name
