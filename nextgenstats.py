@@ -59,7 +59,6 @@ def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], hi
     # Remove old history entries (> 14 seconds ago)
     fps = 30
     history = [inst for inst in history if wrap_diff(frame_count, inst[4], 1000) < (13*fps)]
-
     update = False
     for i in range(len(prediction)):
         place, confidence = prediction[i][1], prediction[i][2]
@@ -101,7 +100,7 @@ def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[n
     while True:
         frame = frame_queue.get()
         if gp.course_state >= 1:
-            labels = model_store.models['countdown_detector'].predict(frame)
+            labels = model_store.models['countdown_detector'].predict(frame = frame, players = gp.player_count)
             for i, (region, prediction, confidence) in enumerate(labels):
                 if i == 0:
                     if prediction == 'GO' and confidence >= 0.98:

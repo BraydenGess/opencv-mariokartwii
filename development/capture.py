@@ -1,4 +1,7 @@
 import cv2 as cv
+import collections
+from collections import deque
+import time
 
 def capture_10():
     cap = cv.VideoCapture(0)
@@ -8,7 +11,7 @@ def capture_10():
         ret, frame = cap.read()
         count += 1
         if count % 2 == 0:
-            file_name = '2MooMoo'
+            file_name = '2FLuigiCircuit'
             cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
             pic += 1
         if count == 100:
@@ -21,7 +24,7 @@ def capture_1():
     cv.imwrite(f'development/Images/RawImages/{file_name}.png', frame)
     print(file_name)
 
-capture_10()
+#capture_10()
 
 
 def spell_fix():
@@ -43,3 +46,33 @@ def spell_fix():
             # Rename the file
             os.rename(old_file, new_file)
             print(f'Renamed: {filename} -> {new_filename}')
+
+
+def save_video(frames, filename):
+    """
+    Saves frames to a video file.
+    """
+    if not frames:
+        return
+
+    fps = 30
+    height, width, _ = frames[0].shape
+    fourcc = cv.VideoWriter_fourcc(*'mp4v')  # MP4 format
+    out = cv.VideoWriter(filename, fourcc, fps, (width, height))
+
+    for frame in frames:
+        #flipped_frame = cv.flip(frame,0)
+        out.write(frame)
+
+    out.release()
+    print(f"Saved highlight: {filename}")
+
+cap = cv.VideoCapture(0)
+queue = deque()
+t1 = time.time()
+t2 = time.time()
+while (t2-t1) <= (0.1*60):
+    ret, new_frame = cap.read()
+    queue.append(new_frame)
+    t2 = time.time()
+save_video(list(queue),'development/fullgame.mp4')

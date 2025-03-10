@@ -1,3 +1,4 @@
+import cv2
 from development.placement_detection.train_placement_detection import SimpleCNN
 import torch
 import torch.nn.functional as F
@@ -24,7 +25,7 @@ class PlacementDetector:
         return model
 
     # Function to preprocess the image and make predictions
-    def predict(self, frame):
+    def predict(self, frame, players = 4):
         classes = ['1', '10', '11', '12', '2', '3', '4', '5', '6', '7', '8', '9']
         class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
         # Read the image using OpenCV
@@ -37,8 +38,19 @@ class PlacementDetector:
             'region4': (880, 1020, 1580, 1800)  # Bottom-right region
         }
 
+        if players == 2:
+            regions = {
+                'region1': (340, 510, 90, 360),  # Top region
+                'region2': (853, 1023, 90, 360)  # Bottom region
+            }
+
         # Extract the regions from the image
-        cropped_regions = {region_name: frame[y1:y2, x1:x2] for region_name, (y1, y2, x1, x2) in regions.items()}
+        cropped_regions = dict()
+        for region_name, (y1, y2, x1, x2) in regions.items():
+            namebox = frame[y1:y2, x1:x2]
+            if players == 2:
+                namebox = cv2.resize(namebox, (220, 140))
+            cropped_regions[region_name] = namebox
 
         # Prepare the labeled regions
         region_predictions = []
@@ -58,4 +70,4 @@ class PlacementDetector:
                 class_label = list(class_to_idx.keys())[predicted_class]
                 region_predictions.append((region_name, class_label, confidence.item()))  # Store confidence as well
 
-        return region_predictions
+        return region_predictions[:players]

@@ -60,7 +60,6 @@ def character_detect(frame: np.ndarray, model_store: ModelStore, gp: GPINFO) -> 
     Detect characters in the given frame and update GPINFO
     """
     predictions = model_store.models['character_detector'].predict(frame = frame, players = gp.player_count)
-    print(predictions)
     for i, (region, character_name, confidence) in enumerate(predictions):
         if confidence >= 0.95:
             gp.characters[i] = character_name
@@ -106,5 +105,5 @@ def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, 
         if gp.course_state == 2:
             if rolling_queue:
                 (peak_frame, frame_count) = rolling_queue[-1]
-                prediction = model_store.models['placement_detector'].predict(peak_frame)
+                prediction = model_store.models['placement_detector'].predict(frame = peak_frame, players = gp.player_count)
                 history = scan_highlights(prediction, rolling_queue, history, gp, frame_count, graphics)

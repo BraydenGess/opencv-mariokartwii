@@ -7,6 +7,7 @@ import random
 from development.countdown_detection.countdown_detector import CountdownDetector
 from development.character_detection.character_detector import CharacterDetector
 from development.vehicle_detection.vehicle_detector import VehicleDetector
+from development.placement_detection.placement_detector import PlacementDetector
 
 import os
 import multiprocessing
@@ -41,19 +42,23 @@ import multiprocessing
 #frame_2 = cv2.resize(frame2[420:495, 425:920],(550,80))
 #frame_3 = cv2.resize(frame2[810:885, 425:920],(550,80))
 
-frame = cv2.imread('development/Images/Countdown/GO/GO_DKSummit_56.png')
+frame = cv2.imread('development/Images/Placement/12+1+11+10_MooMooMeadows_78.png')
+frame3 = cv2.imread('development/Images/RawImages/2FLuigiCircuit_18.png')
 frame2 = cv2.imread('development/Images/RawImages/GO_MOOMOO.png')
 
-frame_1 = frame[190:340, 100:850]
-frame_2 = frame2[190:340, 570:1320]
+#(370, 510, 100, 320)
+frame_1 = frame[370:510, 100:320]
+frame_2 = cv2.resize(frame2[340:510, 90:360],(220,140))
+frame_3 = cv2.resize(frame3[853:1023, 90:360],(220,140))
 
-model = CountdownDetector(model_path = 'production/models/countdown_detection.pth')
+model = PlacementDetector(model_path = 'production/models/placement_detection.pth')
 print(model.predict(frame, players = 4))
 print(model.predict(frame2, players = 2))
+print(model.predict(frame3, players = 2))
 
 cv2.imshow('Sliced Frame', frame_1)
 cv2.imshow('Sliced Frame2', frame_2)
-#cv2.imshow('Sliced Frame3', frame_3)
+cv2.imshow('Sliced Frame3', frame_3)
 
 
 cv2.waitKey(0)

@@ -40,8 +40,8 @@ class CountdownDetector:
 
         if players == 2:
             regions = [
-                ['region 1', 190, 340, 570, 1320],
-                ['region 2', 190, 340, 1035, 1785]
+                ['region 1', 190, 340, 545, 1345],
+                ['region 2', 730, 880, 545, 1345]
             ]
 
         labels = []
@@ -49,6 +49,8 @@ class CountdownDetector:
             region = regions[i][0]
             y0, y1, x0, x1 = regions[i][1], regions[i][2], regions[i][3], regions[i][4]
             new_frame = frame[y0:y1, x0:x1]
+            if players == 2:
+                new_frame = cv2.resize(new_frame, (750, 150))
             if isinstance(new_frame, torch.Tensor):
                 new_frame = new_frame.cpu().numpy()
             if not isinstance(new_frame, Image.Image):

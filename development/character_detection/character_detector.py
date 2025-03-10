@@ -72,4 +72,4 @@ class CharacterDetector:
                 class_label = list(class_to_idx.keys())[predicted_class]
                 region_predictions.append((region_name, class_label, confidence.item()))  # Store confidence as well
 
-        return region_predictions
+        return region_predictions[:players]
