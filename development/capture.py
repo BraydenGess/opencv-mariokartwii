@@ -17,11 +17,11 @@ def capture_10():
 def capture_1():
     cap = cv.VideoCapture(0)
     ret, frame = cap.read()
-    file_name = '2character+'
+    file_name = '2characterWario'
     cv.imwrite(f'development/Images/RawImages/{file_name}.png', frame)
     print(file_name)
 
-capture_1()
+capture_10()
 
 
 def spell_fix():

@@ -41,8 +41,8 @@ class CharacterDetector:
         }
         if players == 2:
             regions = {
-                'region1': (420, 490, 110, 570),  # Top-left region
-                'region2': (785, 855, 110, 570),  # Top-right region
+                'region1': (425, 475, 110, 570),  # Top-left region
+                'region2': (790, 840, 110, 570),  # Top-right region
             }
 
         # Extract the regions from the image

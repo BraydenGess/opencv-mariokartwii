@@ -49,7 +49,7 @@ def vehicle_detect(frame: np.ndarray, model_store: ModelStore, gp: GPINFO) -> No
     """
     Detect vehicles in the given frame and update vehicles in GPINFO
     """
-    predictions = model_store.models['vehicle_detector'].predict(frame)
+    predictions = model_store.models['vehicle_detector'].predict(frame = frame, players = gp.player_count)
     for i, (region, vehicle_name, confidence) in enumerate(predictions):
         if confidence >= 0.95:
             gp.vehicles[i] = vehicle_name
@@ -60,6 +60,7 @@ def character_detect(frame: np.ndarray, model_store: ModelStore, gp: GPINFO) -> 
     Detect characters in the given frame and update GPINFO
     """
     predictions = model_store.models['character_detector'].predict(frame = frame, players = gp.player_count)
+    print(predictions)
     for i, (region, character_name, confidence) in enumerate(predictions):
         if confidence >= 0.95:
             gp.characters[i] = character_name
@@ -101,7 +102,7 @@ def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, 
         if confidence >= 0.965:
             control(frame = frame, model_store = model_store, screen = screen, sp = sp, gp = gp)
 
-        ### NextGenStats capability, high I/O so moved here for better threading, fix later
+        ### NextGenStats capability, high I/O so moved here for better thread allocating, fix later
         if gp.course_state == 2:
             if rolling_queue:
                 (peak_frame, frame_count) = rolling_queue[-1]

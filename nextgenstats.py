@@ -97,10 +97,8 @@ def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], hi
 
 def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[np.ndarray], model_store: ModelStore,
               gp: GPINFO, graphics):
-    #history = []
 
     while True:
-
         frame = frame_queue.get()
         if gp.course_state >= 1:
             labels = model_store.models['countdown_detector'].predict(frame)
@@ -110,10 +108,4 @@ def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[n
                         gp.course_state = 2
                 if prediction == 'FINISH' and confidence >= 0.99 and gp.course_state == 2:
                     gp.course_state = 3
-
-        #if gp.course_state == 2:
-            #if rolling_queue:
-                #(peak_frame, frame_count) = rolling_queue[-1]
-                #prediction = model_store.models['placement_detector'].predict(peak_frame)
-                #history = scan_highlights(prediction, rolling_queue, history, gp, frame_count, graphics)
 

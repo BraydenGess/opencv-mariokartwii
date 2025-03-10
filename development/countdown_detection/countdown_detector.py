@@ -29,7 +29,7 @@ class CountdownDetector:
         self.model.eval()  # Set to evaluation mode-
         #print("Model loaded successfully!")
 
-    def predict(self, frame):
+    def predict(self, frame, players):
         """Predicts the class of a given image frame with confidence score."""
         regions = [
             ['region 1', 190, 340, 100, 850],
@@ -37,8 +37,15 @@ class CountdownDetector:
             ['region 3', 730, 880, 100, 850],
             ['region 4', 730, 880, 1035, 1785],
         ]
+
+        if players == 2:
+            regions = [
+                ['region 1', 190, 340, 570, 1320],
+                ['region 2', 190, 340, 1035, 1785]
+            ]
+
         labels = []
-        for i in range(4):
+        for i in range(players):
             region = regions[i][0]
             y0, y1, x0, x1 = regions[i][1], regions[i][2], regions[i][3], regions[i][4]
             new_frame = frame[y0:y1, x0:x1]
