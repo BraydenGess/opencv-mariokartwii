@@ -73,6 +73,7 @@ def control(frame, model_store, screen: str, sp: SpotifyPlayer, gp: GPINFO) -> N
 
     if screen == 'main':
         gp.main_state = 0
+        gp.course_history = []
         gp.clear_directory(directory_path = 'nextgenstats/highlights')
         if sp.course_queued != "Opening":
             sp.queue_newsong(course_name = "Opening")

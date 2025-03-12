@@ -106,7 +106,7 @@ def main():
     initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp, graphics)
 
     try:
-        graphics.run(sp, gp)  # This contains the event loop now
+        graphics.run(sp, gp, rolling_queue)  # This contains the event loop now
     except Exception as e:
         import traceback
         print("Error in graphics loop:", e)

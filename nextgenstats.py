@@ -1,4 +1,5 @@
 import cv2
+import time
 import queue
 import random
 import threading
@@ -105,6 +106,7 @@ def run_stats(frame_queue: queue.Queue[np.ndarray], rolling_queue: queue.Queue[n
                 if i == 0:
                     if prediction == 'GO' and confidence >= 0.98:
                         gp.course_state = 2
+                        gp.course_start = time.time()
                 if prediction == 'FINISH' and confidence >= 0.99 and gp.course_state == 2:
                     gp.course_state = 3
 

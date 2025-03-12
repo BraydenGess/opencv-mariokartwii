@@ -4,8 +4,9 @@ import time
 import random
 import shutil
 import spotipy
-from typing import Dict, List, Optional
+from urllib.request import urlopen
 from collections import deque
+from typing import Dict, List, Optional
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 
 from development.course_detection.course_detection import CourseDetector
@@ -24,8 +25,12 @@ class GPINFO():
         self.characters = ['Baby Mario','Baby Mario','Baby Mario','Baby Mario']
         self.vehicles = ['Bit Bike', 'Bit Bike', 'Bit Bike', 'Bit Bike']
         self.places = [12, 11, 10, 9]
+        self.course_history = []
+        self.course_start = None
+
         self.characterstats = self.csv_todict(file = 'nextgenstats/stats/characterstats.csv')
         self.vehiclestats = self.csv_todict(file = 'nextgenstats/stats/vehiclestats.csv')
+        self.course_data = self.csv_todict(file = 'nextgenstats/stats/coursedata.csv')
 
     def clear_directory(self, directory_path):
         """Deletes all files and subdirectories inside a directory."""
@@ -43,8 +48,11 @@ class GPINFO():
 
     def csv_todict(self, file):
         with open(file) as f:
-            dictionary = {row[0]: list(map(int, row[1:])) for row in csv.reader(f)}
+            reader = csv.reader(f)
+            next(reader)
+            dictionary = {row[0]: list(map(str, row[1:])) for row in reader}
         return dictionary
+
 
 class ModelStore():
     def __init__(self, device = 'cpu'):
@@ -86,6 +94,8 @@ class SpotifyPlayer():
         self.songkey_dict = {}
         self.support_volume = False
         self.course_queued = None
+        self.song_queued = None
+        self.song_img = None
         self.is_paused = False
         self.spotify_setup()
 
@@ -146,10 +156,16 @@ class SpotifyPlayer():
     def queue_newsong(self, course_name: str):
         song = self.playlist[course_name].song_queue.popleft()
         next_song = self.playlist[course_name].song_queue.popleft()
-        self.queue_songs(songs = [self.get_song(next_song), self.get_song(song)])
+        song_class = self.get_song(song)
+        self.queue_songs(songs = [song_class,self.get_song(next_song)])
         self.course_queued = course_name
         self.playlist[self.course_queued].song_queue.append(song)
         self.playlist[self.course_queued].song_queue.appendleft(next_song)
+        if song_class.song_name in self.songkey_dict:
+            self.song_queued = self.songkey_dict[song_class.song_name]
+            self.song_img = urlopen(self.song_queued.img).read()
+        else:
+            self.song_queued = None
 
     def make_coursedict(self, file: str) -> Dict:
         course_dict = dict()

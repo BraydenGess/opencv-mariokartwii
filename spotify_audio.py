@@ -29,6 +29,7 @@ def course_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore,
                 # Manage Game States
                 gp.main_state = -1
                 gp.course_state = 1
+                gp.course_history.append(course_name)
                 gp.clear_directory(directory_path = "nextgenstats/highlights")
 
                 # Record what triggered it for model fine-tuning
