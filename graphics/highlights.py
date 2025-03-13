@@ -22,7 +22,7 @@ def load_highlight_videos():
     """
     Loads highlight videos and removes files if a higher letter or newer same letter exists within 3 seconds
     """
-    HIGHLIGHT_DIR = "nextgenstats/highlights"
+    HIGHLIGHT_DIR = "graphics/assets/highlights"
     if not os.path.exists(HIGHLIGHT_DIR):
         os.makedirs(HIGHLIGHT_DIR, exist_ok=True)
         return []
@@ -75,7 +75,7 @@ def load_highlight_videos():
     return selected_files
 
 
-def play_video(graphics, display_surface, video_path, x, y):
+def play_video(graphics, display_surface, video_path, x, y, gp):
     """Plays a video file on the Pygame window."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -87,9 +87,8 @@ def play_video(graphics, display_surface, video_path, x, y):
 
     while cap.isOpened():
         ret, frame = cap.read()
-        if not ret:
+        if not ret or gp.course_state != 3:
             break  # Stop when video ends
-
         player = int(video_path.split('_')[1])
         marg = 12
         frame = frame[:,marg:len(frame[1])-(marg*2)]
@@ -122,20 +121,58 @@ def play_video(graphics, display_surface, video_path, x, y):
                     return  # Quit playback
 
         clock.tick(fps)
-
     cap.release()
 
+def play_top(graphics, display_surface, label, gp):
+    """Plays a video file on the Pygame window."""
+    x,y = graphics.x, graphics.y
+    video_path = f'graphics/assets/Top10/{label}.mp4'
+    cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
+    if not cap.isOpened():
+        print(f"Error: Could not open video file {video_path}!")
+        return
+    fps = 30
+    clock = pygame.time.Clock()
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret or gp.course_state != 3:
+            break  # Stop when video ends
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        frame = cv2.resize(frame, (x, y))
+        frame = cv2.flip(frame, 1)
+        frame_surface = pygame.surfarray.make_surface(np.rot90(frame))
+        display_surface.blit(frame_surface, (0, 0))
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                cap.release()
+                return
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_q, pygame.K_ESCAPE):
+                    cap.release()
+                    return  # Quit playback
+        clock.tick(fps)
+    cap.release()
 
 def play_highlights(graphics, display_surface, gp, x, y):
     """Loop through all highlight videos until gp.course_state is not 3."""
-    highlight_videos = load_highlight_videos()
+    highlight_videos = load_highlight_videos()[:2]
     if not highlight_videos:
         return
+    ### Intro video
+    label = 'Intro'
+    print('hello')
+    play_top(graphics, display_surface, label, gp)
 
     while gp.course_state == 3:
-        for video_path in highlight_videos:
+        for i, video_path in enumerate(highlight_videos):
             if ((gp.course_state != 3) or (gp.main_state == 0)):
-                break  # Exit the loop if course_state is no longer 3
-            play_video(graphics, display_surface, video_path, x, y)  # Play current highlight
-        return
-    return
+                return
+
+            play_top(graphics, display_surface, str(i+1), gp)
+            play_video(graphics, display_surface, video_path, x, y, gp)  # Play current highlight
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or (
+                        event.type == pygame.KEYDOWN and event.key in (pygame.K_q, pygame.K_ESCAPE)):
+                    gp.course_state = 0  # Ensure the loop stops
+                    return

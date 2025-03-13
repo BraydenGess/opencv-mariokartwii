@@ -9,7 +9,7 @@ from __init__ import *
 from graphics.highlights import play_highlights
 
 class Graphics():
-    def __init__(self, screen_setting='fullscreen'):
+    def __init__(self, screen_setting='fulscreen'):
         self.screen_setting = screen_setting
         self.x, self.y = None, None
         self.display_surface = None
@@ -207,14 +207,19 @@ class Graphics():
             frame_surface = pygame.transform.scale(frame_surface, self.display_surface.get_size())
             self.display_surface.blit(frame_surface, (0, 0))
 
-            icon = pygame.image.load(f'graphics/assets/CharacterImages/{gp.characters[region]}.png')  # Replace with your icon path
-            icon = pygame.transform.scale(icon, (self.x//8, self.x//8))  # Resize the icon to fit your needs
-
             # Blit the icon to the top-left corner (coordinates (0, 0))
-            self.display_surface.blit(icon, (self.x//64, self.x//64))
+            icon_x, icon_y = self.x//64, self.x//64
+            icon_width, icon_height = self.x//8, self.x//8
+            border_thickness = 5
+            icon = pygame.image.load(f'graphics/assets/CharacterImages/{gp.characters[region]}.png')  # Replace with your icon path
+            icon = pygame.transform.scale(icon, (icon_width, icon_height))  # Resize the icon to fit your needs
+            pygame.draw.rect(self.display_surface, (255, 255, 255),
+                             (icon_x - border_thickness, icon_y - border_thickness,
+                              icon_width + 2 * border_thickness, icon_height + 2 * border_thickness))
+            self.display_surface.blit(icon, (icon_x,icon_y))
 
 
-    def play_video(graphics, display_surface, video_path, x, y):
+    def play_video(graphics, display_surface, video_path, x, y, gp):
         """Plays a video file on the Pygame window."""
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -224,7 +229,7 @@ class Graphics():
         clock = pygame.time.Clock()
         while cap.isOpened():
             ret, frame = cap.read()
-            if not ret:
+            if not ret or gp.course_state != 2:
                 break  # Stop when video ends
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
             frame = cv2.resize(frame, (x, y))
@@ -246,18 +251,18 @@ class Graphics():
 
     def racing(self, sp, gp, rolling_queue):
         t2 = time.time()
-        if t2-gp.course_start <= 4:
+        if t2-gp.course_start <= 5:
             self.song_intro(sp)
         else:
-            time_delta = t2-(gp.course_start+4)
+            time_delta = t2-(gp.course_start+5)
             key = time_delta%50
             feed_time = 20
             if key <= feed_time:
                 character = key//(feed_time//gp.player_count)
                 self.live_feed(rolling_queue = rolling_queue, region = int(character), count=gp.player_count, gp = gp)
-            elif key <= 34:
+            elif key <= 32:
                 video_path = f'graphics/assets/CourseIntros/{sp.course_queued}.mp4'
-                self.play_video(self.display_surface,video_path,self.x,self.y)
+                self.play_video(self.display_surface,video_path,self.x,self.y, gp)
             elif key <= 50:
                 self.course_intro(sp, gp)
 
@@ -267,7 +272,7 @@ class Graphics():
 
     def run(self, sp, gp, rolling_queue):
         running = True
-
+        t = time.time()
         while running:
 
             self.display_surface.fill((0, 0, 0))
@@ -281,10 +286,9 @@ class Graphics():
                 self.course_intro(sp, gp)
             elif gp.course_state == 2:
                 self.racing(sp, gp, rolling_queue)
-            elif gp.course_state == 3:
-                play_highlights(self, self.display_surface, gp, self.x, self.y)
+            #elif gp.course_state == 3:
+                #play_highlights(self, self.display_surface, gp, self.x, self.y)
             pygame.display.update()
-
             ### Exit handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

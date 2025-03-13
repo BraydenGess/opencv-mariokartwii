@@ -68,14 +68,17 @@ def main():
     sp = SpotifyPlayer()
     graphics = Graphics()
     gp.main_state = -1
-    gp.course_state = 2
+    gp.course_state = 3
     gp.course_history = []
     gp.characters = ['Funky Kong','Luigi','Yoshi','Peach']
-    sp.course_queued = "Luigi Circuit"
+    sp.course_queued = "N64 Bowser's Castle"
     gp.course_history.append(sp.course_queued)
-    img_str = 'https://i.scdn.co/image/ab67616d0000b2738399047ff71200928f5b6508'
-    sp.song_queued = Song(song_name = "Thunderstruck", uri = 'spotify:track:7snQQk1zcKl8gZ92AnueZW',
-                          img = img_str)
+    img_str = 'https://i.scdn.co/image/ab67616d0000b27372d481a5999197ef5f42f796'
+    s = ['Zombie', 'spotify: track:7EZC6E7UjZe63f1jRmkWxt',
+         'https://i.scdn.co/image/ab67616d0000b27372d481a5999197ef5f42f796']
+
+    sp.song_queued = Song(song_name = s[0], uri = s[1],
+                          img = s[2])
 
     sp.song_img = urlopen(img_str).read()
     gp.course_start = time.time()
@@ -90,6 +93,8 @@ def main():
 
     frame_thread = threading.Thread(target=update_frames, args=(cap, frame_queue, rolling_queue), daemon=True)
     frame_thread.start()
+
+
 
     try:
         graphics.run(sp, gp, rolling_queue)  # This contains the event loop now
