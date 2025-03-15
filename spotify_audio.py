@@ -21,7 +21,7 @@ def course_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore,
             frame = frame_queue.get()
 
             # Detect course
-            course_name, confidence, text_detection = model_store.models['course_detector'].detect_course(frame)
+            course_name, confidence = model_store.models['course_detector'].detect_course(frame)
 
             if course_name and course_name != sp.course_queued:
                 sp.queue_newsong(course_name)

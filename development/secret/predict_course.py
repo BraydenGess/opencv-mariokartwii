@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import cv2
 from torchvision import transforms
-from train_course_detector import SimpleCNN
+from development.secret.train_course_detector import SimpleCNN
 
 class CourseFlagDetector:
     def __init__(self, flag_model_path=None, course_model_path=None, device='cpu'):
@@ -10,17 +10,21 @@ class CourseFlagDetector:
         self.course_model_path = course_model_path
         self.device = device
         self.flag_model = self.load_model(self.flag_model_path, num_classes=2)  # Flag model (2 classes)
-        self.course_model = self.load_model(self.course_model_path, num_classes=3)  # Course model (36 classes)
+        self.course_model = self.load_model(self.course_model_path, num_classes=18)  # Course model (36 classes)
 
     def load_model(self, model_path, num_classes):
         model = SimpleCNN(num_classes=num_classes)
-        model.load_state_dict(torch.load(model_path))  # Load the saved weights
+        model.load_state_dict(torch.load(model_path)) # Load the saved weights
+        model.to(self.device)
         model.eval()  # Set the model to evaluation mode
         return model
 
-    def predict(self, frame):
+    def detect_course(self, frame):
         class_to_idx_flag = ['no_flag', 'flag']  # Define flag classes
-        class_to_idx_course =  ['Luigi Circuit', "N64 DK's Jungle Parkway", 'Opening']
+        class_to_idx_course =  ["Bowser's Castle", 'Coconut Mall', 'DK Summit', 'Daisy Circuit', 'Dry Dry Ruins',
+                                'Grumble Volcano', 'Koopa Cape', 'Luigi Circuit', 'Maple Treeway', 'Mario Circuit',
+                                'Moo Moo Meadows', 'Moonview Highway', 'Mushroom Gorge', "N64 DK's Jungle Parkway",
+                                'Opening', 'Rainbow Road', "Toad's Factory", "Wario's Gold Mine"]
 
         transform = transforms.Compose([
             transforms.ToPILImage(),
@@ -53,15 +57,24 @@ class CourseFlagDetector:
             course_confidence, course_predicted = torch.max(course_probs, 1)
             course_class = class_to_idx_course[course_predicted.item()]
 
-        # Return the predictions for both flag and course
-        return {
+        predictions = {
             'flag': {'class': flag_class, 'confidence': flag_confidence.item()},
             'course': {'class': course_class, 'confidence': course_confidence.item()}
         }
+        flag_prediction = predictions['flag']['class']
+        flag_confidence= predictions['flag']['confidence']
+        course_prediction = predictions['course']['class']
+        course_confidence = predictions['course']['confidence']
+        if flag_prediction == 'flag' and course_prediction not in ['Opening','black']:
+            confidence = flag_confidence * course_confidence
+            if confidence > 0.98:
+                return course_prediction, confidence
 
-model = CourseFlagDetector(flag_model_path='development/secret/flag_detector.pth',
-                           course_model_path='development/secret/course_detector.pth')
-frame = cv2.imread("development/Images/Courses/N64 DK's Jungle Parkway/N64DKsJungleParkway_110.png")
+        # Return the predictions for both flag and course
+        return None, None
+
+#model = CourseFlagDetector(flag_model_path='development/secret/flag_detector.pth',course_model_path='development/secret/course_detector.pth')
+#frame = cv2.imread("development/Images/Courses/N64 DK's Jungle Parkway/N64DKsJungleParkway_110.png")
 #frame = cv2.imread("development/Images/Courses/Opening/Opening_15.png")
-preds = model.predict(frame = frame)
-print(preds)
+#preds = model.detect_course(frame = frame)
+#print(preds)

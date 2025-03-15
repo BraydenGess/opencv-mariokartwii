@@ -12,9 +12,21 @@ regions = {
     'course': (925, 1000, 1035, 1790)  # course detection region
 }
 
+def select_device() -> torch.device:
+    """
+    Selects the best available computing device for PyTorch
+
+    Returns: torch.device
+    """
+    if torch.backends.mps.is_available():
+        return torch.device("mps")   # macOS Apple Silicon
+    elif torch.cuda.is_available():
+        return torch.device("cuda")  # NVIDIA GPUs
+    return torch.device("cpu")
+
 # Custom dataset for loading and transforming images
 class RegionDataset(Dataset):
-    def __init__(self, root_folder, transform = None, target='flag'):
+    def __init__(self, root_folder, transform=None, target='flag'):
         self.root_folder = root_folder
         self.transform = transform
         self.target = target  # Either 'flag' or 'text'
@@ -93,14 +105,15 @@ def train_model(root_folder, target, model_path, num_epochs=5, batch_size=8):
     train_loader, classes = create_dataloader(root_folder, batch_size, target)
     num_classes = len(classes)
     print(f"Training {target} model with classes: {classes}")
-    model = SimpleCNN(num_classes).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    device = select_device()  # Select the device
+    model = SimpleCNN(num_classes).to(device)  # Move model to the selected device
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
         for images, labels in train_loader:
-            images, labels = images.to(torch.device("cuda" if torch.cuda.is_available() else "cpu")), labels.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+            images, labels = images.to(device), labels.to(device)  # Move tensors to the selected device
             outputs = model(images)
             loss = criterion(outputs, labels)
             optimizer.zero_grad()
@@ -119,3 +132,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

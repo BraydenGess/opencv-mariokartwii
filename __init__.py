@@ -15,6 +15,7 @@ from development.character_detection.character_detector import CharacterDetector
 from development.vehicle_detection.vehicle_detector import VehicleDetector
 from development.placement_detection.placement_detector import PlacementDetector
 from development.countdown_detection.countdown_detector import CountdownDetector
+from development.secret.predict_course import CourseFlagDetector
 
 
 class Course():
@@ -43,9 +44,9 @@ class GPINFO():
         self.course_start = None
 
         # Load character, vehicle, and course data from csv files
-        self.characterstats = self.csv_todict(file = 'nextgenstats/stats/characterstats.csv')
-        self.vehiclestats = self.csv_todict(file = 'nextgenstats/stats/vehiclestats.csv')
-        self.course_data = self.csv_todict(file = 'nextgenstats/stats/coursedata.csv')
+        self.characterstats = self.csv_todict(file_path = 'nextgenstats/stats/characterstats.csv')
+        self.vehiclestats = self.csv_todict(file_path = 'nextgenstats/stats/vehiclestats.csv')
+        self.course_data = self.csv_todict(file_path = 'nextgenstats/stats/coursedata.csv')
 
     @staticmethod
     def clear_directory(directory_path):
@@ -90,7 +91,8 @@ class ModelStore():
     def load_models(self):
         """Loads all required models and stores them in a dictionary"""
         model_paths = {
-            'course_detector': 'development/course_detection/models/flag_detector_20250221_122742.pth',
+            'course_detector': 'development/secret/course_detector.pth',
+            'flag_detector': 'development/secret/flag_detector.pth',
             'state_detector': 'production/models/menu_detection.pth',
             'character_detector' : 'production/models/character_classifier.pth',
             'vehicle_detector': 'production/models/vehicle_classifier.pth',
@@ -99,7 +101,9 @@ class ModelStore():
         }
         # Initialize model objects
         self.models = {
-            'course_detector': CourseDetector(flag_model_path = model_paths['course_detector'], device = self.device),
+            'course_detector': CourseFlagDetector(flag_model_path = model_paths['flag_detector'],
+                                                  course_model_path = model_paths['course_detector'],
+                                                  device = self.device),
             'state_detector': StateDetector(model_path=model_paths['state_detector'], device=self.device),
             'character_detector': CharacterDetector(model_path=model_paths['character_detector'], device=self.device),
             'vehicle_detector': VehicleDetector(model_path=model_paths['vehicle_detector'], device=self.device),

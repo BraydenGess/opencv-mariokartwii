@@ -10,7 +10,7 @@ def capture_10():
     while cap.isOpened():
         ret, frame = cap.read()
         count += 1
-        file_name = "Wario's Gold Mine"
+        file_name = "Rainbow Road"
         cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
         pic += 1
         if count == 275:
