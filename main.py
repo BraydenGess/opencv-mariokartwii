@@ -105,12 +105,13 @@ def main():
     # Start all background threads
     initialize_threads(cap, frame_queue, rolling_queue, model_store, sp, gp, graphics)
 
+    # Run graphics on the main-thread
     try:
-        graphics.run(sp, gp, rolling_queue)  # This contains the event loop now
+        graphics.run(sp, gp, rolling_queue)
     except Exception as e:
         import traceback
         print("Error in graphics loop:", e)
-        traceback.print_exc()  # Print the full error traceback
+        traceback.print_exc()
         pygame.quit()
         sys.exit()
 

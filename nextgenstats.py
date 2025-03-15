@@ -46,8 +46,7 @@ def save_video(frames, filename, graphics):
     out = cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
     for frame in frames:
-        flipped_frame = cv2.flip(frame,0)
-        out.write(flipped_frame)
+        out.write(frame)
 
     out.release()
     print(f"Saved highlight: {filename}")
@@ -81,7 +80,7 @@ def scan_highlights(prediction: list, rolling_queue: queue.Queue[np.ndarray], hi
                     ]
                     length = len(rolling_frames)
                     if length >= fps*4:
-                        filename = os.path.join(f"nextgenstats/highlights/{rank}_{i}_{int(time.time())}_{p0}_{p1}_{length}.mp4")
+                        filename = os.path.join(f"graphics/assets/highlights/{rank}_{i}_{int(time.time())}_{p0}_{p1}_{length}.mp4")
                         save_video(rolling_frames, filename, graphics)
         else:
             break

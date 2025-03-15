@@ -7,20 +7,23 @@ import os
 import re
 
 
-def parse_filename(filename):
+def parse_filename(file):
     """
-    Extracts letter, number, and timestamp from the filename
+    Parses filenames like 'a_0_2023_4_9_12.mp4' and returns (letter, number, timestamp, filename).
     """
-    match = re.match(r"([a-zA-Z])_(\d+)_(\d+)_.*\.mp4", filename)
-    if match:
-        letter, number, timestamp = match.groups()
-        return letter, int(number), int(timestamp), filename
-    return None
+    try:
+        parts = file[:-4].split("_")  # Remove .mp4 and split
+        letter = parts[0]
+        number = int(parts[1])
+        timestamp = int(parts[2])  # Assuming timestamp is a single integer
+        return letter, number, timestamp, file
+    except (IndexError, ValueError):
+        return None
 
 
 def load_highlight_videos():
     """
-    Loads highlight videos and removes files if a higher letter or newer same letter exists within 3 seconds
+    Loads highlight videos and removes files if a higher letter or newer same letter exists within 3 seconds.
     """
     HIGHLIGHT_DIR = "graphics/assets/highlights"
     if not os.path.exists(HIGHLIGHT_DIR):
@@ -41,13 +44,13 @@ def load_highlight_videos():
     selected_files = []
 
     # Step 2: Process each group
-    for key in grouped_files:
+    for number in sorted(grouped_files.keys()):  # Ensure 'a_0' is first, then 'b_2'
         # Sort by letter (ascending) and timestamp (descending)
-        grouped_files[key].sort(key=lambda x: (x[0], -x[1]))
+        grouped_files[number].sort(key=lambda x: (x[0], -x[1]))
 
         kept_files = []
 
-        for file in grouped_files[key]:
+        for file in grouped_files[number]:
             letter, timestamp, filename = file
             should_keep = True
 
@@ -55,12 +58,12 @@ def load_highlight_videos():
                 kept_letter, kept_timestamp, kept_filename = kept
 
                 # If a higher letter exists within 3 seconds, remove this file
-                if kept_letter > letter and abs(kept_timestamp - timestamp) <= 12:
+                if kept_letter > letter and abs(kept_timestamp - timestamp) <= 3:
                     should_keep = False
                     break
 
                 # If the same letter exists within 3 seconds and is newer, remove this file
-                if kept_letter == letter and abs(kept_timestamp - timestamp) <= 12:
+                if kept_letter == letter and abs(kept_timestamp - timestamp) <= 3:
                     should_keep = False
                     break
 
@@ -89,21 +92,21 @@ def play_video(graphics, display_surface, video_path, x, y, gp):
         ret, frame = cap.read()
         if not ret or gp.course_state != 3:
             break  # Stop when video ends
-        player = int(video_path.split('_')[1])
-        marg = 12
-        frame = frame[:,marg:len(frame[1])-(marg*2)]
-        new_x = x - (3*marg)
-        if player == 0:
-            frame = frame[y//2:, :new_x//2]
-        if player == 1:
-            frame = frame[y//2:, new_x//2:]
-        if player == 2:
-            frame = frame[:y//2, marg:new_x // 2]
-        if player == 3:
-            frame = frame[:y//2, new_x // 2:]
+
+        region = int(video_path.split('_')[1])
+        if gp.player_count == 4:
+            key = f'region{region}'
+            [y0, y1, x0, x1] = graphics.regions_4[key]
+        elif gp.player_count == 2:
+            key = f'region{region}'
+            [y0, y1, x0, x1] = graphics.regions_2[key]
+
+        frame = frame[int(y0):int(y1), int(x0):int(x1)]
+
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
         frame = cv2.resize(frame, (x, y))
-        frame_surface = pygame.surfarray.make_surface(np.rot90(frame, 3))
+        frame = cv2.flip(frame, 1)
+        frame_surface = pygame.surfarray.make_surface(np.rot90(frame))
         display_surface.blit(frame_surface, (0, 0))
 
         txt, txtRect = graphics.create_text('Arial', 32, video_path, (255, 255, 255),
@@ -117,6 +120,7 @@ def play_video(graphics, display_surface, video_path, x, y, gp):
                 return
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_q, pygame.K_ESCAPE):
+                    gp.course_state = 1
                     cap.release()
                     return  # Quit playback
 
@@ -149,6 +153,7 @@ def play_top(graphics, display_surface, label, gp):
                 return
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_q, pygame.K_ESCAPE):
+                    gp.course_state = 1
                     cap.release()
                     return  # Quit playback
         clock.tick(fps)
@@ -161,7 +166,6 @@ def play_highlights(graphics, display_surface, gp, x, y):
         return
     ### Intro video
     label = 'Intro'
-    print('hello')
     play_top(graphics, display_surface, label, gp)
 
     while gp.course_state == 3:

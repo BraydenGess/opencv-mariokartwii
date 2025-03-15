@@ -63,12 +63,20 @@ def update_frames(cap: cv2.VideoCapture, frame_queue: queue.Queue, rolling_queue
 
     cap.release()
 
+class A:
+    def __init__(self, x = None):
+        self.x = x
+    @staticmethod
+    def add(number):
+        return 8
+
+
 def main():
     gp = GPINFO()
     sp = SpotifyPlayer()
     graphics = Graphics()
     gp.main_state = -1
-    gp.course_state = 3
+    gp.course_state = 2
     gp.course_history = []
     gp.characters = ['Funky Kong','Luigi','Yoshi','Peach']
     sp.course_queued = "N64 Bowser's Castle"

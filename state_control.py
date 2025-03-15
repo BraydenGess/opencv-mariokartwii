@@ -25,24 +25,29 @@ def player_count(frame: np.ndarray, gp: GPINFO) -> None:
 
     Updates `gp.player_count` if a match is found with high confidence.
     """
-
-    gray_frame = cv2.cvtColor(frame[50:125, 510:650], cv2.COLOR_BGR2GRAY)
+    # Preprocess the frame for gray conversion and binary thresholding
+    cropped_frame = frame[50:125, 510:650]
+    gray_frame = cv2.cvtColor(cropped_frame, cv2.COLOR_BGR2GRAY)
     _, binary_frame = cv2.threshold(gray_frame, 128, 255, cv2.THRESH_BINARY)
 
-    REFERENCE_DIR = 'production/referenceimages/player_counts'
-    ref_files = [f for f in os.listdir(REFERENCE_DIR) if f.endswith(".png")]
-    ref_images = list()
-    for filename in ref_files:
-        ref_img = cv2.imread(os.path.join(REFERENCE_DIR,filename), cv2.IMREAD_GRAYSCALE)
-        if ref_img is not None:
-            _, ref_img = cv2.threshold(ref_img[50:125, 510:650], 128, 255, cv2.THRESH_BINARY)
-            ref_images.append((filename, ref_img))
+    # List and load reference images only once
+    reference_dir = 'production/referenceimages/player_counts'
+    ref_files = [f for f in os.listdir(reference_dir) if f.endswith(".png")]
 
+    ref_images = [
+        (filename,cv2.threshold(cv2.imread(os.path.join(reference_dir, filename),
+                                cv2.IMREAD_GRAYSCALE)[50:125, 510:650], 128, 255, cv2.THRESH_BINARY)[1])
+        for filename in os.listdir(reference_dir) if filename.endswith(".png")
+    ]
+
+    # Match each reference image with the frame
     for filename, ref_image in ref_images:
         result = cv2.matchTemplate(binary_frame, ref_image, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
+        # Update player count if match found with high confidence
         if max_val >= 0.925:
             gp.player_count = int(filename[0])
+            break
 
 
 def vehicle_detect(frame: np.ndarray, model_store: ModelStore, gp: GPINFO) -> None:
@@ -73,21 +78,23 @@ def control(frame, model_store, screen: str, sp: SpotifyPlayer, gp: GPINFO) -> N
 
     if screen == 'main':
         gp.main_state = 0
-        gp.course_history = []
-        gp.clear_directory(directory_path = 'nextgenstats/highlights')
+        gp.course_history.clear()
+        gp.clear_directory(directory_path = 'graphics/assets/highlights')
+
         if sp.course_queued != "Opening":
             sp.queue_newsong(course_name = "Opening")
 
-    # Should only be valid states if after main is detected
+    # Process screens only if the main state is valid
     if gp.main_state >= 0:
-        if screen == 'players':
-            player_count(frame, gp)
-        if screen == 'characters':
-            gp.main_state = 1
-            character_detect(frame, model_store, gp)
-        elif screen == 'vehicles':
-            gp.main_state = 2
-            vehicle_detect(frame, model_store, gp)
+        screen_actions = {
+            'players': lambda: player_count(frame, gp),
+            'characters': lambda: (setattr(gp, 'main_state', 1),character_detect(frame, model_store, gp)),
+            'vehicles': lambda: (setattr(gp, 'main_state', 2), vehicle_detect(frame, model_store, gp)),
+        }
+
+        action = screen_actions.get(screen)
+        if action:
+            action()
 
 
 def state_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore, sp: SpotifyPlayer, gp: GPINFO,

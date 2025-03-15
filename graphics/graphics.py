@@ -185,17 +185,19 @@ class Graphics():
 
 
     def live_feed(self, rolling_queue, region, count, gp):
+        t1 = time.time()
         if rolling_queue:
-            frame = rolling_queue[-1][0]  # Get the latest frame
+            #frame = rolling_queue[-1][0]  # Get the latest frame
             frame = cv2.imread('development/Images/Placement/1+12+11+10_LuigiCircuit_147.png')
 
-            if count == 4:
+            if gp.player_count == 4:
                 key = f'region{region}'
-                [y0,y1,x0,x1] = self.regions_4[key]
-            elif count == 2:
+                [y0, y1, x0, x1] = self.regions_4[key]
+            elif gp.player_count == 2:
                 key = f'region{region}'
                 [y0, y1, x0, x1] = self.regions_2[key]
-            frame = frame[int(y0):int(y1),int(x0):int(x1)]
+
+            frame = frame[y0:y1, x0:x1]
 
             # Convert OpenCV BGR frame to RGB and then to Pygame surface
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -204,7 +206,9 @@ class Graphics():
             frame_surface = pygame.surfarray.make_surface(frame)
 
             # Draw the frame on Pygame's display surface
-            frame_surface = pygame.transform.scale(frame_surface, self.display_surface.get_size())
+            #frame_surface = pygame.transform.scale(frame_surface, self.display_surface.get_size())
+            frame_surface = pygame.transform.scale(frame_surface, (self.x, self.y))
+
             self.display_surface.blit(frame_surface, (0, 0))
 
             # Blit the icon to the top-left corner (coordinates (0, 0))
@@ -217,6 +221,8 @@ class Graphics():
                              (icon_x - border_thickness, icon_y - border_thickness,
                               icon_width + 2 * border_thickness, icon_height + 2 * border_thickness))
             self.display_surface.blit(icon, (icon_x,icon_y))
+        t2 = time.time()
+        print(t2-t1)
 
 
     def play_video(graphics, display_surface, video_path, x, y, gp):
@@ -286,8 +292,8 @@ class Graphics():
                 self.course_intro(sp, gp)
             elif gp.course_state == 2:
                 self.racing(sp, gp, rolling_queue)
-            #elif gp.course_state == 3:
-                #play_highlights(self, self.display_surface, gp, self.x, self.y)
+            elif gp.course_state == 3:
+                play_highlights(self, self.display_surface, gp, self.x, self.y)
             pygame.display.update()
             ### Exit handling
             for event in pygame.event.get():

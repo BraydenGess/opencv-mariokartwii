@@ -30,14 +30,13 @@ def course_detect(frame_queue: queue.Queue[np.ndarray], model_store: ModelStore,
                 gp.main_state = -1
                 gp.course_state = 1
                 gp.course_history.append(course_name)
-                gp.clear_directory(directory_path = "nextgenstats/highlights")
+                gp.clear_directory(directory_path = "graphics/assets/highlights")
 
                 # Record what triggered it for model fine-tuning
                 timestamp = int(time.time())
                 cv2.imwrite(f'development/triggers/{course_name}_{timestamp}.png', frame)
 
-        except queue.Empty:
-            # Avoid busy waiting if using non-blocking get()
+        except queue.Empty: # Avoid busy waiting if using non-blocking get()
             time.sleep(0.01)
         except Exception as e:
             print(f"[ERROR] course_detect encountered an issue: {e}")
