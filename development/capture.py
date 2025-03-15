@@ -10,11 +10,10 @@ def capture_10():
     while cap.isOpened():
         ret, frame = cap.read()
         count += 1
-        if count % 2 == 0:
-            file_name = '2FLuigiCircuit'
-            cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
-            pic += 1
-        if count == 100:
+        file_name = "Wario's Gold Mine"
+        cv.imwrite(f'development/Images/RawImages/{file_name}_{pic}.png',frame)
+        pic += 1
+        if count == 275:
             break
 
 def capture_1():
@@ -24,14 +23,14 @@ def capture_1():
     cv.imwrite(f'development/Images/RawImages/{file_name}.png', frame)
     print(file_name)
 
-#capture_10()
+capture_10()
 
 
 def spell_fix():
     import os
 
     # Path to the folder containing the files
-    folder_path = 'Images/Courses/GrumbleVolcano'
+    folder_path = 'Images/Courses/Grumble Volcano'
 
     # Loop through all the files in the folder
     for filename in os.listdir(folder_path):
@@ -66,13 +65,3 @@ def save_video(frames, filename):
 
     out.release()
     print(f"Saved highlight: {filename}")
-
-cap = cv.VideoCapture(0)
-queue = deque()
-t1 = time.time()
-t2 = time.time()
-while (t2-t1) <= (0.1*60):
-    ret, new_frame = cap.read()
-    queue.append(new_frame)
-    t2 = time.time()
-save_video(list(queue),'development/fullgame.mp4')
